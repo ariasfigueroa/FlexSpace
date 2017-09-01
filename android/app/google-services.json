@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "118807203865",
+    "firebase_url": "https://flexspace-bae45.firebaseio.com",
+    "project_id": "flexspace-bae45",
+    "storage_bucket": "flexspace-bae45.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:118807203865:android:5f01c997afef15fb",
+        "android_client_info": {
+          "package_name": "app.oo.android.flexspace"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "118807203865-rjips29r19femj534nh5aav8dbjp68uc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDj2lybpECBaGKGjn1uvfsh5ISuPgx9nbg"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
