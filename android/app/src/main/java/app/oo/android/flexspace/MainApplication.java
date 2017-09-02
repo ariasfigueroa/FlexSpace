@@ -1,4 +1,4 @@
-package com.flexspace;
+package app.oo.android.flexspace;
 
 import android.app.Application;
 

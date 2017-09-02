@@ -1,4 +1,4 @@
-package com.flexspace;
+package app.oo.android.flexspace;
 
 import com.facebook.react.ReactActivity;
 
