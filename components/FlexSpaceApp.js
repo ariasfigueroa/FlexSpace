@@ -379,7 +379,10 @@ export const Stack = StackNavigator({
   RequestAccountScreen: {
     screen: RequestAccount,
   }
-}
+},
+{
+    initialRouteName: 'ClientScreen'
+  }
 );
 
 AppRegistry.registerComponent('FlexSpace', () => Stack);

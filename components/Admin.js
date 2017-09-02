@@ -13,7 +13,9 @@ import {
 class Admin extends Component {
 
   static navigationOptions = {
-    header: null,
+    headerStyle: {
+      backgroundColor: "rgba(43,43,43,1)",
+    },
     gesturesEnabled: false,
   };
 
