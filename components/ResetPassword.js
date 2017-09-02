@@ -55,7 +55,6 @@ class ResetPassword extends Component {
             });
             this.goBack();
           }, style: 'cancel'}],  { cancelable: false });
-
         }, (error) => {
           this.setState({errorMessage: error});
         });

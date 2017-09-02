@@ -17,9 +17,9 @@ import {
 
 import { NavigationActions } from 'react-navigation';
 import Firebase from '../lib/Firebase';
+import { Dropdown } from 'react-native-material-dropdown';
 
 const {width, height} = Dimensions.get('window');
-
 
 class RequestAccount extends Component {
 
@@ -33,8 +33,10 @@ class RequestAccount extends Component {
     this.state = {
       userName: '',
       cliente: '',
+      clienteKey: '',
       errorMessage: null,
-      showActivityIndicator: false,
+      showActivityIndicator: true,
+      clientes: null,
     }
     this._resetErrors = this._resetErrors.bind(this)
     this.goBack = this.goBack.bind(this);
@@ -45,25 +47,28 @@ class RequestAccount extends Component {
       this.setState({errorMessage: null})
   }
 
-  resetPassword(){
+  requestNewAccount(){
     try{
-      if (this.state.userName){
+      if (this.state.userName && this.state.clienteKey && this.state.cliente){
         this.setState({
           showActivityIndicator: !this.state.showActivityIndicator
         });
-        Firebase.resetPassword(this.state.userName, () => {
-          Alert.alert('Contraseña', 'Te enviamos un correo a: ' + this.state.userName, [ {text: 'OK', onPress: () => {
+        // Send request to create the account.
+        let object = {email: this.state.userName, clienteKey: this.state.clienteKey}
+        Firebase.requestNewAccount(object, ()=>{
+          // success
+          Alert.alert('Enviado', 'Solicitud enviada.', [ {text: 'OK', onPress: () => {
             this.setState({
               showActivityIndicator: !this.state.showActivityIndicator
             });
             this.goBack();
           }, style: 'cancel'}],  { cancelable: false });
-
         }, (error) => {
+          // error
           this.setState({errorMessage: error});
         });
       } else {
-        this.setState({errorMessage: 'Correo Electrónico es requerido.'});
+        this.setState({errorMessage: 'Correo Electrónico es requerido y Empresa son requeridos'});
       }
     } catch(error){
       this.setState({errorMessage: error.message});
@@ -75,8 +80,29 @@ class RequestAccount extends Component {
     this.props.navigation.dispatch(backAction)
   }
 
-  onSelect(data) {
-    this.setState({cliente : data});
+  componentDidMount(){
+    try{
+      Firebase.obtainClients((snapshot) =>{
+        if (snapshot){
+          var index = 0;
+          var clientes = [];
+          snapshot.forEach((snapshotItem) => {
+            index++;
+            clientes.push({value: snapshotItem.child('nombre').val(), key: snapshotItem.key});
+            if (index === snapshot.numChildren()){
+              //set the value
+              this.setState({clientes, showActivityIndicator: false});
+            }
+          });
+        }else {
+          this.setState({errorMessage: 'No se encontraron clientes.'});
+        }
+      }, (error)=>{
+        this.setState({errorMessage: error});
+      });
+    }catch (error){
+        this.setState({errorMessage: error});
+    }
   }
 
   render(){
@@ -136,13 +162,22 @@ class RequestAccount extends Component {
                 </View>
               </View>
 
-              <View>
-
+              <View style={styles.dropdownStyle}>
+                <Dropdown
+                containerStyle={{marginHorizontal: 10}}
+                label='Para que empresa?'
+                data={this.state.clientes}
+                onChangeText={(value, index)=>{
+                  var clientsL = this.state.clientes;
+                  this.setState({cliente: clientsL[index].value, clienteKey: clientsL[index].key});
+                }}
+                value={this.state.cliente}
+                />
               </View>
 
               <View style={styles.loginButtonContainer}>
                 <TouchableOpacity style={styles.loginButtonStyle}
-                  onPress={this.resetPassword.bind(this)}
+                  onPress={this.requestNewAccount.bind(this)}
                 >
                  <Text style={styles.textInsideButtons}>
                    Solicitar Cuenta
@@ -263,6 +298,14 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     backgroundColor: 'transparent',
   },
+  dropdownStyle: {
+    width: width - 100,
+    backgroundColor: 'rgba(255,255,255,0.80)',
+    borderRadius: 5,
+    flex: 1,
+    justifyContent: 'center',
+    marginTop: 20,
+  }
 
 });
 
