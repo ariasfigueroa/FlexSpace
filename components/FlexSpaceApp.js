@@ -17,24 +17,18 @@ import {
 
 import { StackNavigator, NavigationActions } from 'react-navigation';
 import FCM, {FCMEvent, RemoteNotificationResult, WillPresentNotificationResult, NotificationType} from 'react-native-fcm';
-
-import * as firebase from 'firebase';
-// Initialize Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyAeQC3le2ofB5iBkUCHWyYQ42D-Oi2020c",
-   authDomain: "flexspace-bae45.firebaseapp.com",
-   databaseURL: "https://flexspace-bae45.firebaseio.com",
-   projectId: "flexspace-bae45",
-   storageBucket: "flexspace-bae45.appspot.com",
-   messagingSenderId: "118807203865",
-};
-const firebaseApp = firebase.initializeApp(firebaseConfig);
+import Firebase from '../lib/Firebase';
+import Client from './Client';
+import Admin from './Admin';
+import ResetPassword from './ResetPassword';
+import RequestAccount from './RequestAccount';
 
 const {width, height} = Dimensions.get('window');
 class FlexSpaceApp extends Component{
 
   static navigationOptions = {
     header: null,
+    gesturesEnabled: false,
   };
 
   constructor(props){
@@ -46,7 +40,6 @@ class FlexSpaceApp extends Component{
       showActivityIndicator: false,
     }
     this._resetErrors = this._resetErrors.bind(this)
-    this._getTextInputRefs = this._getTextInputRefs.bind(this)
   }
 
     componentDidMount() {
@@ -55,7 +48,6 @@ class FlexSpaceApp extends Component{
           console.log('Token: ', token)
           // store fcm token in your server
       });
-
       this.notificationListener = FCM.on(FCMEvent.Notification, async (notif) => {
           // there are two parts of notif. notif.notification contains the notification payload, notif.data contains data payload
           if(notif.local_notification){
@@ -99,10 +91,6 @@ class FlexSpaceApp extends Component{
           this.refreshTokenListener.remove();
       }
 
-    _getTextInputRefs(){
-      return [this.userNameInput, this.passwordInput]
-    }
-
     _resetErrors(){
       if (this.state.errorMessage)
         this.setState({errorMessage: null})
@@ -116,107 +104,163 @@ class FlexSpaceApp extends Component{
     login(){
       try {
         if (this.state.userName && this.state.password){
-          this.setState({showActivityIndicator: true})
-          firebaseApp.auth().signOut().then((onResolve)=> {
-            firebaseApp.auth().signInWithEmailAndPassword(this.state.userName, this.state.password).then((onResolveUser) => {
-              setTimeout(()=>{
-                this.setState({showActivityIndicator: false})
-                this._navigate('home')
-              }, 1000);
-            }, (onRejectUser)=>{
-              this.setState({showActivityIndicator: false})
-              console.log(onRejectUser)
-            })
-          }, (onReject) => {
-            this.setState({showActivityIndicator: false})
-            console.log(onReject)
-          })
+          this.setState({showActivityIndicator: !this.state.showActivityIndicator});
+          Firebase.loginWithEmail(this.state.userName, this.state.password , (User)=>{
+            console.log(User);
+            console.log(User.uid)
+            // get userRole
+            Firebase.obtainUserRole(User.uid, (snapshot)=>{
+              if (snapshot){
+                const { navigate } = this.props.navigation;
+                var screen = '';
+                var props = {};
+                if (snapshot.child('role').val() === 'admin'){
+                  screen = 'AdminScreen';
+                  var clients = snapshot.child('client').val();
+                  for (var clientL in clients){
+                    props['cliente'] = clientL;
+                    break;
+                  }
+                }else {
+                  screen = 'ClientScreen';
+                  var clients = snapshot.child('client').val();
+                  for (var clientL in clients){
+                    props['cliente'] = clientL;
+                    break;
+                  }
+                }
+                this.setState({showActivityIndicator: !this.state.showActivityIndicator});
+                navigate(screen, props);
+                }else {
+                console.log('user without permisions.');
+                this.setState({showActivityIndicator: !this.state.showActivityIndicator});
+              }
+            });
+
+          }, (errorMessage)=>{
+            console.log(errorMessage);
+            this.setState({errorMessage: errorMessage.message})
+          });
         } else {
-          this.setState({errorMessage: 'Correo Eletrónico y Contraseña requeridos.'})
+          this.setState({errorMessage: 'Correo Eletrónico y Contraseña requeridos.'});
         }
       } catch (error) {
-        console.log(error);
-        this.setState({errorMessage: error.message})
+        this.setState({errorMessage: error.message});
       }
     }
 
   render(){
-    return(
-      <View style={styles.container}>
-      <StatusBar
-         barStyle="light-content"
-      />
-        <Image
-          style={styles.backgroundImage}
-          source={require('../resources/img/FlexSpaceBackGround.png')}
+    if (this.state.showActivityIndicator){
+      return(
+        <View style={styles.container}>
+        <StatusBar
+           barStyle="light-content"
         />
-        <KeyboardAvoidingView
-          behavior='position'
-          style={styles.containerAbsolute}
-        >
-          <View style={styles.textInputViewStyle}>
-            <View style={styles.logoView}>
-              <Image
-                style={styles.logo}
-                source={require('../resources/img/flexLogo.png')}
-              />
-            </View>
-            <View style={styles.loginView}>
-              <View style={[styles.loginField, styles.loginDivisor]}>
-                <TextInput style={styles.textInputStyle}
-                   autoCapitalize= {'none'}
-                   autoCorrect={false}
-                   placeholder= {'Correo Electrónico'}
-                   onChangeText={(userName) => this.setState({userName})}
-                   returnKeyType={'next'}
-                   keyboardType={'email-address'}
-                   ref={(userNameInput) => this.userNameInput = userNameInput}
-                   onSubmitEditing={() => this.passwordInput.focus()}
-                   value={this.state.userName}
-                   onFocus={this._resetErrors}
+          <Image
+            style={styles.backgroundImage}
+            source={require('../resources/img/FlexSpaceBackGround.png')}
+          />
+          <View style={styles.containerAbsolute}>
+            <ActivityIndicator
+              animating={this.state.showActivityIndicator}
+              style={{height: 80}}
+              size="large"
+            />
+          </View>
+        </View>
+      );
+    } else {
+      return(
+        <View style={styles.container}>
+        <StatusBar
+           barStyle="light-content"
+        />
+          <Image
+            style={styles.backgroundImage}
+            source={require('../resources/img/FlexSpaceBackGround.png')}
+          />
+          <KeyboardAvoidingView
+            behavior='padding'
+            style={styles.containerAbsolute}
+          >
+            <View style={styles.textInputViewStyle}>
+              <View style={styles.logoView}>
+                <Image
+                  style={styles.logo}
+                  source={require('../resources/img/flexLogo.png')}
                 />
               </View>
-              <View style={[styles.loginField]}>
-                <TextInput style={styles.textInputStyle}
-                  autoCapitalize= {'none'}
-                  autoCorrect={false}
-                  placeholder= {'Contraseña'}
-                  onChangeText={(password) => this.setState({password})}
-                  returnKeyType={'go'}
-                  secureTextEntry={true}
-                  keyboardType={'default'}
-                  ref={(passwordInput) => this.passwordInput = passwordInput}
-                  value={this.state.password}
-                  onFocus={this._resetErrors}
-                />
+              <View style={styles.loginView}>
+                <View style={[styles.loginField, styles.loginDivisor]}>
+                  <TextInput style={styles.textInputStyle}
+                     autoCapitalize= {'none'}
+                     autoCorrect={false}
+                     placeholder= {'Correo Electrónico'}
+                     onChangeText={(userName) => this.setState({userName})}
+                     returnKeyType={'next'}
+                     keyboardType={'email-address'}
+                     ref={(userNameInput) => this.userNameInput = userNameInput}
+                     onSubmitEditing={() => this.passwordInput.focus()}
+                     value={this.state.userName}
+                     onFocus={this._resetErrors}
+                  />
+                </View>
+                <View style={[styles.loginField]}>
+                  <TextInput style={styles.textInputStyle}
+                    autoCapitalize= {'none'}
+                    autoCorrect={false}
+                    placeholder= {'Contraseña'}
+                    onChangeText={(password) => this.setState({password})}
+                    returnKeyType={'go'}
+                    secureTextEntry={true}
+                    keyboardType={'default'}
+                    ref={(passwordInput) => this.passwordInput = passwordInput}
+                    value={this.state.password}
+                    onFocus={this._resetErrors}
+                  />
+                </View>
               </View>
-            </View>
-            <View style={styles.forgotPasswordButtonStyle}>
-              <TouchableOpacity
-                onPress={()=>{
-                console.log('reset pass');
-                }
-              }>
-                <Text style={styles.textButtons}>
-                  ¿Olvidaste tu contraseña?
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.loginButtonContainer}>
-              <TouchableOpacity style={styles.loginButtonStyle}
-                onPress={this.login.bind(this)}
-              >
-               <Text style={styles.textInsideButtons}>
-                 Iniciar Sesión
-               </Text>
-              </TouchableOpacity>
-            </View>
+              <View style={styles.forgotPasswordButtonStyle}>
+                <TouchableOpacity
+                  onPress={()=>{
+                    const { navigate } = this.props.navigation;
+                    navigate('ResetPasswordScreen');
+                  }
+                }>
+                  <Text style={styles.textButtons}>
+                    ¿Olvidaste tu contraseña?
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.loginButtonContainer}>
+                <TouchableOpacity style={styles.loginButtonStyle}
+                  onPress={this.login.bind(this)}
+                >
+                 <Text style={styles.textInsideButtons}>
+                   Iniciar Sesión
+                 </Text>
+                </TouchableOpacity>
+              </View>
 
-            {this.state.errorMessage ? <Text style={styles.errorMessageStyle}> {this.state.errorMessage} </Text> : null}
-            </View>
-          </KeyboardAvoidingView>
-      </View>
-    );
+              <View style={styles.forgotPasswordButtonStyle}>
+                <TouchableOpacity
+                  onPress={()=>{
+                  const { navigate } = this.props.navigation;
+                  navigate('RequestAccountScreen');
+                  }
+                }>
+                  <Text style={styles.textInsideButtons}>
+                    No tengo cuenta, solicitar una.
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {this.state.errorMessage ? <Text style={styles.errorMessageStyle}> {this.state.errorMessage} </Text> : null}
+              </View>
+            </KeyboardAvoidingView>
+        </View>
+      );
+    }
   }
 }
 
@@ -274,52 +318,66 @@ const styles = StyleSheet.create({
     width: width - 100,
     height:40,
     borderRadius: 5,
-},
-loginDivisor:{
-  borderBottomWidth: 0.3,
-},
-forgotPasswordButtonStyle: {
-  flex: 1,
-  alignItems: 'center',
-  justifyContent: 'center',
-  marginTop: 20,
-},
-textButtons: {
-  color: '#FFFFFF',
-  fontSize: 16,
-  fontStyle: 'italic',
-  fontWeight: '400',
-  backgroundColor: 'transparent',
-},
-loginButtonContainer:{
-  width: width - 100,
-  height:44,
-  backgroundColor: '#C2272F',
-  borderRadius: 5,
-  flex: 1,
-  alignItems: 'center',
-  justifyContent: 'center',
-  marginTop: 80,
-},
-textInsideButtons:{
-  color: '#FFFFFF',
-  fontSize: 16,
-  fontWeight: 'bold',
-},
-errorMessageStyle: {
-  marginTop: 20,
-  color: '#FFFFFF',
-  fontSize: 14,
-  fontWeight: '500',
-  textAlign: 'center',
-  fontStyle: 'italic',
-  backgroundColor: 'transparent',
-},
+  },
+  loginDivisor:{
+    borderBottomWidth: 0.3,
+  },
+  forgotPasswordButtonStyle: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  textButtons: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontStyle: 'italic',
+    fontWeight: '400',
+    backgroundColor: 'transparent',
+  },
+  loginButtonContainer:{
+    width: width - 100,
+    height:44,
+    backgroundColor: '#C2272F',
+    borderRadius: 5,
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 40,
+  },
+  textInsideButtons:{
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    backgroundColor: 'transparent',
+  },
+  errorMessageStyle: {
+    marginTop: 20,
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center',
+    fontStyle: 'italic',
+    backgroundColor: 'transparent',
+  },
+
 });
 
 export const Stack = StackNavigator({
   FlexSpaceApp: {
     screen: FlexSpaceApp,
+  },
+  AdminScreen:{
+    screen: Admin,
+  },
+  ClientScreen: {
+    screen: Client,
+  },
+  ResetPasswordScreen: {
+    screen: ResetPassword,
+  },
+  RequestAccountScreen: {
+    screen: RequestAccount,
   }
 }
 );
