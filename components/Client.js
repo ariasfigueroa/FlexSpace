@@ -13,6 +13,8 @@ import {
 
 
 import Icon from 'react-native-vector-icons/Entypo';
+import IconMaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
 import CachedImage from 'react-native-cached-image';
 const {width, height} = Dimensions.get('window');
 
@@ -125,7 +127,7 @@ class Client extends Component {
               <Text style={[styles.contactBoxTitleStyle, {fontWeight: 'bold'}]}>1, FEBRERO</Text>
             </View>
             <View style={styles.contactBoxStyle}>
-              <Text style={styles.contactBoxTitleStyle}>VIGENCIA DEL CONTRATO</Text>
+              <Text style={styles.contactBoxTitleStyle}>VIGENCIA</Text>
               <Text style={[styles.contactBoxTitleStyle, {fontWeight: 'bold'}]}>31/12/2020</Text>
             </View>
           </View>
@@ -165,11 +167,42 @@ class Client extends Component {
           </View>
           {this.state.settlementOrContractSelected === 'D' ? (
             <View style={styles.containerSettlementsAndContractList}>
-              <Text>Here goes the list of Settlements</Text>
+              <View style={styles.itemContainerSettlementsAndContractList}>
+                <View style={styles.itemContainerSettlements}>
+                  <View style={styles.depositDataContainer}>
+                    <IconMaterialCommunityIcons
+                      name="arrow-top-right"
+                      size={40}
+                      color="#6AB817"
+                    />
+                    <View style={styles.depositDataTextContainer}>
+                      <Text style={styles.depositDataTextStyle}>Transf. # 124</Text>
+                      <Text style={styles.depositDataTextDateStyle}>25/Mar/2017 15:43</Text>
+                    </View>
+
+                  </View>
+                  <Text style={styles.depositDataTextStyle}>+ $145,000.25</Text>
+                </View>
+              </View>
             </View>
           ) : (
             <View style={styles.containerSettlementsAndContractList}>
-              <Text>Here goes the list of Contracts</Text>
+              <View style={styles.itemContainerSettlementsAndContractList}>
+                <View style={styles.itemContainerSettlements}>
+                  <View style={styles.depositDataContainer}>
+                    <IconFontAwesome
+                      name="file-pdf-o"
+                      size={40}
+                      color="black"
+                    />
+                    <View style={styles.depositDataTextContainer}>
+                      <Text style={styles.depositDataTextStyle}>Barcel_contrato.pdf</Text>
+                      <Text style={styles.depositDataTextDateStyle}>Última actualización 25/May/2017</Text>
+                    </View>
+
+                  </View>
+                </View>
+              </View>
             </View>
           )}
         </View>
@@ -302,7 +335,42 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  }
+  },
+  itemContainerSettlementsAndContractList: {
+    width: width - 40,
+    height: 60,
+    backgroundColor: '#E4E4E4',
+    borderRadius: 10,
+    marginBottom: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  itemContainerSettlements: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: width - 40,
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+  },
+  depositDataContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  depositDataTextContainer:{
+    marginHorizontal: 10,
+  },
+  depositDataTextStyle:{
+    color: '#21243D',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  depositDataTextDateStyle:{
+    fontSize: 12,
+  },
+  depositAmountTextStyle:{
+    marginLeft: 10,
+  },
 
 });
 
