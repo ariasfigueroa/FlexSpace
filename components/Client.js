@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
+  StatusBar,
 } from 'react-native';
 
 
@@ -77,11 +78,17 @@ class Client extends Component {
 
   constructor(props){
       super(props);
+      this.state = {
+        settlementOrContractSelected: 'D',
+      }
   }
 
   render(){
     return(
       <View style={styles.container}>
+      <StatusBar
+         barStyle="light-content"
+      />
       <ScrollView>
         <View style={styles.containerHeader}>
           <View style={styles.avaterContainer}>
@@ -91,27 +98,80 @@ class Client extends Component {
               style={styles.imageAvatar}
             />
           </View>
-
+          <View>
+            <Text style={styles.balanceStyle}>BALANCE PENDIENTE</Text>
+          </View>
+          <View>
+            <Text style={styles.balanceAmountStyle}>$32,500.00</Text>
+          </View>
+          <View>
+            <Text style={styles.dueDateStyle}>vence 23/Jun/2017</Text>
+          </View>
         </View>
         <View style={styles.containerAddress}>
-          <Text>Here goes the Address</Text>
+          <View style={styles.addressContentStyle}>
+            <Text style={[styles.textAddressStyle, {marginLeft: 20}]}>AERONAUTICA #6857</Text>
+            <Text style={[styles.textAddressStyle, {marginRight: 20}]}>5004.80 M2</Text>
+          </View>
         </View>
         <View style={styles.containerContract}>
-          <Text>Here goes the contract data</Text>
+          <View style={styles.subcontainerContract}>
+            <View style={styles.contactBoxStyle}>
+              <Text style={styles.contactBoxTitleStyle}>INCREMENTO</Text>
+              <Text style={[styles.contactBoxTitleStyle, {fontWeight: 'bold'}]}>INPC</Text>
+            </View>
+            <View style={styles.contactBoxStyle}>
+              <Text style={styles.contactBoxTitleStyle}>FECHA PARA INCREMENTO</Text>
+              <Text style={[styles.contactBoxTitleStyle, {fontWeight: 'bold'}]}>1, FEBRERO</Text>
+            </View>
+            <View style={styles.contactBoxStyle}>
+              <Text style={styles.contactBoxTitleStyle}>VIGENCIA DEL CONTRATO</Text>
+              <Text style={[styles.contactBoxTitleStyle, {fontWeight: 'bold'}]}>31/12/2020</Text>
+            </View>
+          </View>
         </View>
-        <View style={styles.containerSeatlements}>
-          <Text>Here goes the Seatlements</Text>
-            <Text>Here goes the Seatlements</Text>
-              <Text>Here goes the Seatlements</Text>
-                <Text>Here goes the Seatlements</Text>
-                  <Text>Here goes the Seatlements</Text>
-                    <Text>Here goes the Seatlements</Text>
-                      <Text>Here goes the Seatlements</Text>
-                        <Text>Here goes the Seatlements</Text>
-                          <Text>Here goes the Seatlements</Text>
-                            <Text>Here goes the Seatlements</Text>
-                              <Text>Here goes the Seatlements</Text>
-                                <Text>Here goes the Seatlements</Text>
+        <View style={styles.containerSettlements}>
+          <View style={styles.containerSettlementsAndContract}>
+            <TouchableOpacity
+            onPress={()=>{
+              if (this.state.settlementOrContractSelected !== 'D')
+                this.setState({settlementOrContractSelected: 'D'});
+            }}
+            >
+              <View style={this.state.settlementOrContractSelected === 'D' ? styles.verticalAligningSelected :styles.verticalAligning}>
+                <Icon
+                  name="credit-card"
+                  size={18}
+                  color="#21243D"
+                />
+                <Text style={styles.textButtonSettlementsAndContract}>Depositos</Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+            onPress={()=>{
+              if (this.state.settlementOrContractSelected !== 'C')
+                this.setState({settlementOrContractSelected: 'C'});
+            }}
+            style={{marginLeft: 30}}>
+              <View style={this.state.settlementOrContractSelected === 'C' ? styles.verticalAligningSelected :styles.verticalAligning}>
+                <Icon
+                  name="text-document"
+                  size={18}
+                  color="#21243D"
+                />
+                <Text style={styles.textButtonSettlementsAndContract}>Contrato</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+          {this.state.settlementOrContractSelected === 'D' ? (
+            <View style={styles.containerSettlementsAndContractList}>
+              <Text>Here goes the list of Settlements</Text>
+            </View>
+          ) : (
+            <View style={styles.containerSettlementsAndContractList}>
+              <Text>Here goes the list of Contracts</Text>
+            </View>
+          )}
         </View>
       </ScrollView>
     </View>
@@ -143,13 +203,13 @@ const styles = StyleSheet.create({
   },
   containerContract: {
     width,
-    height: 160,
+    height: 120,
     backgroundColor: '#FFFFFF',
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  containerSeatlements: {
+  containerSettlements: {
     width,
     backgroundColor: '#FFFFFF',
     flex: 1,
@@ -162,11 +222,88 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     borderWidth: 1,
     borderColor: 'rgba(43,43,43,1)',
+    marginBottom: 10,
   },
   imageAvatar: {
     width: 60,
     height: 60,
+  },
+  balanceStyle: {
+    color: '#21243D',
+    textAlign: 'center',
+    fontSize: 15,
+    marginBottom: 5,
+  },
+  balanceAmountStyle: {
+    color: '#959595',
+    textAlign: 'center',
+    fontSize: 30,
+
+  },
+  dueDateStyle: {
+    color: '#21243D',
+    textAlign: 'center',
+    fontSize: 12,
+  },
+  addressContentStyle:{
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    width,
+    justifyContent: 'space-between'
+  },
+  textAddressStyle: {
+    color: '#FFFFFF',
+    fontSize: 14,
+  },
+  subcontainerContract: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    width,
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+  },
+  contactBoxStyle: {
+    width: 100,
+    height: 80,
+    borderRadius: 10,
+    backgroundColor: '#C2272F',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    paddingVertical: 15,
+    paddingHorizontal: 10,
+  },
+  contactBoxTitleStyle: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    textAlign: 'center',
+    backgroundColor: 'transparent'
+  },
+  containerSettlementsAndContract: {
+    flexDirection: 'row',
+  },
+  textButtonSettlementsAndContract: {
+    color: '#21243D',
+    fontSize: 16,
+    textAlign: 'center',
+    fontWeight: '500',
+    marginLeft: 5,
+  },
+  verticalAligning: {
+    flexDirection: 'row',
+  },
+  verticalAligningSelected: {
+    flexDirection: 'row',
+    borderBottomWidth: 2,
+    borderColor: '#C2272F'
+  },
+  containerSettlementsAndContractList: {
+    marginTop: 20,
+    width,
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   }
+
 });
 
 export default Client;
