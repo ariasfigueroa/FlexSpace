@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Dimensions,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 
 
@@ -16,6 +17,8 @@ import Icon from 'react-native-vector-icons/Entypo';
 import IconMaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
 import CachedImage from 'react-native-cached-image';
+import Firebase from '../lib/Firebase';
+
 const {width, height} = Dimensions.get('window');
 
 class Client extends Component {
@@ -82,133 +85,239 @@ class Client extends Component {
       super(props);
       this.state = {
         settlementOrContractSelected: 'D',
+        clienteKey: 'barcel',
+        role: 'cliente',
+        showActivityIndicator: true,
+        client: null,
+        schedule: null,
+        depositos: null,
       }
   }
 
+  componentDidMount(){
+    try {
+      if (this.state.clienteKey && this.state.role){
+        // get client data
+        Firebase.obtainClient(this.state.clienteKey, (snapshot)=>{
+          Firebase.obtainSchedule(this.state.clienteKey, (snapshotSchedule)=>{
+            var currentSchedule = null;
+            var index = 0;
+            snapshotSchedule.forEach((item)=>{
+              index ++;
+              var date = new Date(item.child('fechaPago').val());
+              var currentDate = new Date();
+              var status = item.child('estado').val();
+              if (status === 'no_enviado' && (currentDate.getMonth()+1 === date.getMonth()+1)){
+                currentSchedule = item.val();
+                currentSchedule['fechaPago'] = (date.getDate() + '/' + (date.getMonth()+1) + '/' + date.getFullYear());
+              }
+              if (index === snapshotSchedule.numChildren()){
+                Firebase.obtainDepositos(this.state.clienteKey, (snapshotDepositos)=>{
+                  var indexDepositos = 0;
+                  var depositos = [];
+                  snapshotDepositos.forEach((itemDeposito)=>{
+                    indexDepositos ++;
+                    var item = itemDeposito.val();
+                    item['key'] = indexDepositos-1;
+                    depositos.push(item);
+                    if (indexDepositos === snapshotDepositos.numChildren()){
+                      console.log(depositos);
+                      this.setState({cliente: snapshot.val(), schedule: currentSchedule, depositos, showActivityIndicator: false});
+                    }
+                  });
+                }, (errorDepositos)=>{
+                  console.log(errorDepositos);
+                });
+              }
+            });
+          }, (errorSchedule)=>{
+            console.log(errorSchedule);
+          });
+        }, (error)=>{
+          console.log(error);
+        })
+      } else  {
+        console.log('no client like that');
+      }
+    }catch(error){
+      console.log(error);
+    }
+  }
+
+  convertToDollars(n, currency) {
+    return currency + " " + n.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,");
+  }
+
   render(){
-    return(
-      <View style={styles.container}>
-      <StatusBar
-         barStyle="light-content"
-      />
-      <ScrollView>
-        <View style={styles.containerHeader}>
-          <View style={styles.avaterContainer}>
-            <CachedImage
-              resizeMode={'contain'}
-              source={{uri: "https://firebasestorage.googleapis.com/v0/b/flexspace-bae45.appspot.com/o/negocio%2FTakis.png?alt=media&token=211d47c6-ebb2-467a-997f-00627016e567"}}
-              style={styles.imageAvatar}
-            />
-          </View>
-          <View>
-            <Text style={styles.balanceStyle}>BALANCE PENDIENTE</Text>
-          </View>
-          <View>
-            <Text style={styles.balanceAmountStyle}>$32,500.00</Text>
-          </View>
-          <View>
-            <Text style={styles.dueDateStyle}>vence 23/Jun/2017</Text>
-          </View>
+    if (this.state.showActivityIndicator ){
+      return(
+        <View style={styles.containerActivityIndicator}>
+          <StatusBar
+             barStyle="light-content"
+          />
+          <ActivityIndicator
+            animating={this.state.showActivityIndicator}
+            style={{height: 80}}
+            size="large"
+          />
         </View>
-        <View style={styles.containerAddress}>
-          <View style={styles.addressContentStyle}>
-            <Text style={[styles.textAddressStyle, {marginLeft: 20}]}>AERONAUTICA #6857</Text>
-            <Text style={[styles.textAddressStyle, {marginRight: 20}]}>5004.80 M2</Text>
-          </View>
-        </View>
-        <View style={styles.containerContract}>
-          <View style={styles.subcontainerContract}>
-            <View style={styles.contactBoxStyle}>
-              <Text style={styles.contactBoxTitleStyle}>INCREMENTO</Text>
-              <Text style={[styles.contactBoxTitleStyle, {fontWeight: 'bold'}]}>INPC</Text>
-            </View>
-            <View style={styles.contactBoxStyle}>
-              <Text style={styles.contactBoxTitleStyle}>FECHA PARA INCREMENTO</Text>
-              <Text style={[styles.contactBoxTitleStyle, {fontWeight: 'bold'}]}>1, FEBRERO</Text>
-            </View>
-            <View style={styles.contactBoxStyle}>
-              <Text style={styles.contactBoxTitleStyle}>VIGENCIA</Text>
-              <Text style={[styles.contactBoxTitleStyle, {fontWeight: 'bold'}]}>31/12/2020</Text>
-            </View>
-          </View>
-        </View>
-        <View style={styles.containerSettlements}>
-          <View style={styles.containerSettlementsAndContract}>
-            <TouchableOpacity
-            onPress={()=>{
-              if (this.state.settlementOrContractSelected !== 'D')
-                this.setState({settlementOrContractSelected: 'D'});
-            }}
-            >
-              <View style={this.state.settlementOrContractSelected === 'D' ? styles.verticalAligningSelected :styles.verticalAligning}>
-                <Icon
-                  name="credit-card"
-                  size={18}
-                  color="#21243D"
-                />
-                <Text style={styles.textButtonSettlementsAndContract}>Depositos</Text>
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity
-            onPress={()=>{
-              if (this.state.settlementOrContractSelected !== 'C')
-                this.setState({settlementOrContractSelected: 'C'});
-            }}
-            style={{marginLeft: 30}}>
-              <View style={this.state.settlementOrContractSelected === 'C' ? styles.verticalAligningSelected :styles.verticalAligning}>
-                <Icon
-                  name="text-document"
-                  size={18}
-                  color="#21243D"
-                />
-                <Text style={styles.textButtonSettlementsAndContract}>Contrato</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-          {this.state.settlementOrContractSelected === 'D' ? (
-            <View style={styles.containerSettlementsAndContractList}>
-              <View style={styles.itemContainerSettlementsAndContractList}>
-                <View style={styles.itemContainerSettlements}>
-                  <View style={styles.depositDataContainer}>
-                    <IconMaterialCommunityIcons
-                      name="arrow-top-right"
-                      size={40}
-                      color="#6AB817"
-                    />
-                    <View style={styles.depositDataTextContainer}>
-                      <Text style={styles.depositDataTextStyle}>Transf. # 124</Text>
-                      <Text style={styles.depositDataTextDateStyle}>25/Mar/2017 15:43</Text>
-                    </View>
-
+      )
+    } else {
+      const depositosList = this.state.depositos
+      .map((item)=>{
+        if (this.state.role === 'cliente'){
+          return(
+            <View style={styles.itemContainerSettlementsAndContractList} key={item.key}>
+              <View style={styles.itemContainerSettlements}>
+                <View style={styles.depositDataContainer}>
+                  <IconMaterialCommunityIcons
+                    name="arrow-top-right"
+                    size={40}
+                    color="#6AB817"
+                  />
+                  <View style={styles.depositDataTextContainer}>
+                    <Text style={styles.depositDataTextStyle}>Transf. # {item.transferencia}</Text>
+                    <Text style={styles.depositDataTextDateStyle}>{item.fechaTransferencia} {item.horaTransferencia}</Text>
                   </View>
-                  <Text style={styles.depositDataTextStyle}>+ $145,000.25</Text>
+
                 </View>
+                <Text style={styles.depositDataTextStyle}>+ {this.convertToDollars(parseFloat(item.monto ? item.monto : 0.0), '$')}</Text>
               </View>
             </View>
-          ) : (
-            <View style={styles.containerSettlementsAndContractList}>
-              <View style={styles.itemContainerSettlementsAndContractList}>
-                <View style={styles.itemContainerSettlements}>
-                  <View style={styles.depositDataContainer}>
-                    <IconFontAwesome
-                      name="file-pdf-o"
-                      size={40}
-                      color="black"
-                    />
-                    <View style={styles.depositDataTextContainer}>
-                      <Text style={styles.depositDataTextStyle}>Barcel_contrato.pdf</Text>
-                      <Text style={styles.depositDataTextDateStyle}>Última actualización 25/May/2017</Text>
-                    </View>
+          );
+        } else {
+          return(
+            <View style={styles.itemContainerSettlementsAndContractList} key={item.key}>
+              <TouchableOpacity>
+                  <View style={styles.itemContainerSettlements}>
+                    <View style={styles.depositDataContainer}>
+                      <IconMaterialCommunityIcons
+                        name="arrow-top-right"
+                        size={40}
+                        color="#6AB817"
+                      />
+                      <View style={styles.depositDataTextContainer}>
+                        <Text style={styles.depositDataTextStyle}>Transf. # {item.transferencia}</Text>
+                        <Text style={styles.depositDataTextDateStyle}>{item.fechaTransferencia} {item.horaTransferencia}</Text>
+                      </View>
 
+                    </View>
+                    <Text style={styles.depositDataTextStyle}>+ {this.convertToDollars(parseFloat(item.monto ? item.monto : 0.0), '$')}</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+          );
+        }
+      });
+      return(
+        <View style={styles.container}>
+        <StatusBar
+           barStyle="light-content"
+        />
+        <ScrollView>
+          <View style={styles.containerHeader}>
+            <View style={styles.avaterContainer}>
+              <CachedImage
+                resizeMode={'contain'}
+                source={{uri: this.state.cliente.imagenUrl}}
+                style={styles.imageAvatar}
+              />
+            </View>
+            <View>
+              <Text style={styles.balanceStyle}>BALANCE PENDIENTE</Text>
+            </View>
+            <View>
+              <Text style={styles.balanceAmountStyle}>{this.convertToDollars(parseFloat(this.state.schedule.monto ? this.state.schedule.monto : 0.0), '$')}</Text>
+            </View>
+            <View>
+              <Text style={styles.dueDateStyle}>vence {this.state.schedule.fechaPago}</Text>
+            </View>
+          </View>
+          <View style={styles.containerAddress}>
+            <View style={styles.addressContentStyle}>
+              <Text style={[styles.textAddressStyle, {marginLeft: 20}]}>{this.state.cliente.calle}</Text>
+              <Text style={[styles.textAddressStyle, {marginRight: 20}]}>{this.state.cliente.m2} M2</Text>
+            </View>
+          </View>
+          <View style={styles.containerContract}>
+            <View style={styles.subcontainerContract}>
+              <View style={styles.contactBoxStyle}>
+                <Text style={styles.contactBoxTitleStyle}>INCREMENTO</Text>
+                <Text style={[styles.contactBoxTitleStyle, {fontWeight: 'bold'}]}>{this.state.cliente.incremento}</Text>
+              </View>
+              <View style={styles.contactBoxStyle}>
+                <Text style={styles.contactBoxTitleStyle}>FECHA PARA INCREMENTO</Text>
+                <Text style={[styles.contactBoxTitleStyle, {fontWeight: 'bold'}]}>{this.state.cliente.fechaIncremento}</Text>
+              </View>
+              <View style={styles.contactBoxStyle}>
+                <Text style={styles.contactBoxTitleStyle}>VIGENCIA</Text>
+                <Text style={[styles.contactBoxTitleStyle, {fontWeight: 'bold'}]}>{this.state.cliente.vigenciaContrato}</Text>
+              </View>
+            </View>
+          </View>
+          <View style={styles.containerSettlements}>
+            <View style={styles.containerSettlementsAndContract}>
+              <TouchableOpacity
+              onPress={()=>{
+                if (this.state.settlementOrContractSelected !== 'D')
+                  this.setState({settlementOrContractSelected: 'D'});
+              }}
+              >
+                <View style={this.state.settlementOrContractSelected === 'D' ? styles.verticalAligningSelected :styles.verticalAligning}>
+                  <Icon
+                    name="credit-card"
+                    size={18}
+                    color="#21243D"
+                  />
+                  <Text style={styles.textButtonSettlementsAndContract}>Depositos</Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+              onPress={()=>{
+                if (this.state.settlementOrContractSelected !== 'C')
+                  this.setState({settlementOrContractSelected: 'C'});
+              }}
+              style={{marginLeft: 30}}>
+                <View style={this.state.settlementOrContractSelected === 'C' ? styles.verticalAligningSelected :styles.verticalAligning}>
+                  <Icon
+                    name="text-document"
+                    size={18}
+                    color="#21243D"
+                  />
+                  <Text style={styles.textButtonSettlementsAndContract}>Contrato</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+            {this.state.settlementOrContractSelected === 'D' ? (
+              <View style={styles.containerSettlementsAndContractList}>
+                {depositosList}
+              </View>
+            ) : (
+              <View style={styles.containerSettlementsAndContractList}>
+                <TouchableOpacity>
+                <View style={styles.itemContainerSettlementsAndContractList}>
+                  <View style={styles.itemContainerSettlements}>
+                    <View style={styles.depositDataContainer}>
+                      <IconFontAwesome
+                        name="file-pdf-o"
+                        size={40}
+                        color="black"
+                      />
+                      <View style={styles.depositDataTextContainer}>
+                        <Text style={styles.depositDataTextStyle}>{this.state.cliente.contratoNombre}</Text>
+                        <Text style={styles.depositDataTextDateStyle}>Última actualización: {this.state.cliente.ultimaActualizacionContrato}</Text>
+                      </View>
+                    </View>
                   </View>
                 </View>
+                </TouchableOpacity>
               </View>
-            </View>
-          )}
-        </View>
-      </ScrollView>
-    </View>
-    );
+            )}
+          </View>
+        </ScrollView>
+      </View>
+      );
+    }
   }
 }
 
@@ -216,6 +325,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  containerActivityIndicator: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#FFFFFF',
   },
   containerHeader: {
@@ -253,9 +368,10 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    borderWidth: 1,
     borderColor: 'rgba(43,43,43,1)',
     marginBottom: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   imageAvatar: {
     width: 60,
