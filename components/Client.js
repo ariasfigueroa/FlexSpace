@@ -10,20 +10,29 @@ import {
   Dimensions,
   StatusBar,
   ActivityIndicator,
+  Switch,
+  TextInput,
 } from 'react-native';
 
 
 import Icon from 'react-native-vector-icons/Entypo';
 import IconMaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
+import IconSimpleLine from 'react-native-vector-icons/SimpleLineIcons';
 import CachedImage from 'react-native-cached-image';
 import Firebase from '../lib/Firebase';
+import PopupDialog, {
+  DialogTitle,
+  DialogButton,
+  ScaleAnimation,
+} from 'react-native-popup-dialog';
 
+const scaleAnimation = new ScaleAnimation();
 const {width, height} = Dimensions.get('window');
 
 class Client extends Component {
 
-  static navigationOptions = {
+  static navigationOptions = ({navigation}) => {return {
     headerStyle: {
       backgroundColor: "rgba(43,43,43,1)",
     },
@@ -37,17 +46,16 @@ class Client extends Component {
                   }
               }>
               <View style={{paddingLeft: 20}}>
-                <Icon
-                  name= "menu"
+                <IconSimpleLine
+                  name= "logout"
                   color= "#FFFFFF"
-                  size={28}
+                  size={20}
                 />
               </View>
     </TouchableOpacity>),
-    headerRight: (
+    headerRight: navigation.state.params.role && navigation.state.params.role === 'admin' ? (
       <View style={{flexDirection: 'row', marginRight: 20, alignItems: 'flex-end'}}>
-
-      <TouchableOpacity
+        <TouchableOpacity
         style={{marginRight: 30}}
           onPress={()=>{
             console.log('emailing');
@@ -77,8 +85,10 @@ class Client extends Component {
           />
         </View>
         </TouchableOpacity>
+        </View>
+        ) : (<View/>)
+  }
 
-    </View>)
   };
 
   constructor(props){
@@ -91,7 +101,15 @@ class Client extends Component {
         client: null,
         schedule: null,
         depositos: null,
+        depositNumber: '',
       }
+      console.log(this.props.navigation.state.params);
+
+      this.showScaleAnimationDialog = this.showScaleAnimationDialog.bind(this);
+  }
+
+  componentWillMount(){
+    this.setState({clienteKey: this.props.navigation.state.params.cliente, role: this.props.navigation.state.params.role});
   }
 
   componentDidMount(){
@@ -110,6 +128,7 @@ class Client extends Component {
               if (status === 'no_enviado' && (currentDate.getMonth()+1 === date.getMonth()+1)){
                 currentSchedule = item.val();
                 currentSchedule['fechaPago'] = (date.getDate() + '/' + (date.getMonth()+1) + '/' + date.getFullYear());
+                currentSchedule['pagado'] =false;
               }
               if (index === snapshotSchedule.numChildren()){
                 Firebase.obtainDepositos(this.state.clienteKey, (snapshotDepositos)=>{
@@ -121,8 +140,7 @@ class Client extends Component {
                     item['key'] = indexDepositos-1;
                     depositos.push(item);
                     if (indexDepositos === snapshotDepositos.numChildren()){
-                      console.log(depositos);
-                      this.setState({cliente: snapshot.val(), schedule: currentSchedule, depositos, showActivityIndicator: false});
+                      this.setState({cliente: snapshot.val(), schedule: currentSchedule, depositos, showActivityIndicator: false, });
                     }
                   });
                 }, (errorDepositos)=>{
@@ -148,6 +166,10 @@ class Client extends Component {
     return currency + " " + n.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,");
   }
 
+  showScaleAnimationDialog() {
+    this.scaleAnimationDialog.show();
+  }
+
   render(){
     if (this.state.showActivityIndicator ){
       return(
@@ -165,7 +187,6 @@ class Client extends Component {
     } else {
       const depositosList = this.state.depositos
       .map((item)=>{
-        if (this.state.role === 'cliente'){
           return(
             <View style={styles.itemContainerSettlementsAndContractList} key={item.key}>
               <View style={styles.itemContainerSettlements}>
@@ -185,35 +206,79 @@ class Client extends Component {
               </View>
             </View>
           );
-        } else {
-          return(
-            <View style={styles.itemContainerSettlementsAndContractList} key={item.key}>
-              <TouchableOpacity>
-                  <View style={styles.itemContainerSettlements}>
-                    <View style={styles.depositDataContainer}>
-                      <IconMaterialCommunityIcons
-                        name="arrow-top-right"
-                        size={40}
-                        color="#6AB817"
-                      />
-                      <View style={styles.depositDataTextContainer}>
-                        <Text style={styles.depositDataTextStyle}>Transf. # {item.transferencia}</Text>
-                        <Text style={styles.depositDataTextDateStyle}>{item.fechaTransferencia} {item.horaTransferencia}</Text>
-                      </View>
-
-                    </View>
-                    <Text style={styles.depositDataTextStyle}>+ {this.convertToDollars(parseFloat(item.monto ? item.monto : 0.0), '$')}</Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
-          );
-        }
       });
       return(
         <View style={styles.container}>
         <StatusBar
            barStyle="light-content"
         />
+
+        <PopupDialog
+          dismissOnTouchOutside = {true}
+          dialogStyle={{width: width - 40, height: 340}}
+          ref={(popupDialog) => {
+            this.scaleAnimationDialog = popupDialog;
+          }}
+          dialogAnimation={scaleAnimation}
+          dialogTitle={<DialogTitle title="Modificar Balance" />}
+          actions={[
+            <DialogButton
+              text="Guardar"
+              onPress={() => {
+                console.log('Save');
+                //this.updateBalance();
+                this.scaleAnimationDialog.dismiss();
+              }}
+              key="button-1"
+            />,
+            <DialogButton
+              text="Cerrar"
+              onPress={() => {
+                console.log('dismiss');
+                this.scaleAnimationDialog.dismiss();
+              }}
+              key="button-2"
+            />,
+          ]}>
+            {this.state.schedule ? (
+              <View style={styles.dialogContentView}>
+                <View>
+                  <Text style={styles.balanceAmountStyle}>{this.convertToDollars(parseFloat(this.state.schedule && this.state.schedule.monto ? this.state.schedule.monto : 0.0), '$')}</Text>
+                </View>
+                <View>
+                  <Text>BALANCE PENDIENTE</Text>
+                </View>
+                <View style={[styles.verticalAligning, {alignItems: 'center', justifyContent: 'center', marginTop: 20}]}>
+                <Text>
+                  Balance Pagado:
+                </Text>
+                  <Switch
+                  value={this.state.schedule.pagado}
+                    onValueChange={()=>{
+                      var currentSchedule = this.state.schedule;
+                      currentSchedule.pagado = !currentSchedule.pagado;
+                      this.setState({schedule: currentSchedule});
+                    }}
+                  />
+                </View>
+                <View>
+                <TextInput style={styles.textInputStyle}
+                   autoCapitalize= {'none'}
+                   autoCorrect={false}
+                   placeholder= {'# Transferencia'}
+                   onChangeText={(depositNumber) => this.setState({depositNumber})}
+                   returnKeyType={'go'}
+                   keyboardType={'default'}
+                   value={this.state.depositNumber}
+                />
+                </View>
+              </View>) : (
+                <View style={styles.dialogContentView}>
+                  <Text>No hay datos del deposito.</Text>
+                </View>)
+              }
+      </PopupDialog>
+
         <ScrollView>
           <View style={styles.containerHeader}>
             <View style={styles.avaterContainer}>
@@ -223,15 +288,44 @@ class Client extends Component {
                 style={styles.imageAvatar}
               />
             </View>
+            {this.state.schedule ?
+            (
+            <View>
             <View>
               <Text style={styles.balanceStyle}>BALANCE PENDIENTE</Text>
             </View>
             <View>
-              <Text style={styles.balanceAmountStyle}>{this.convertToDollars(parseFloat(this.state.schedule.monto ? this.state.schedule.monto : 0.0), '$')}</Text>
+              <Text style={styles.balanceAmountStyle}>{this.convertToDollars(parseFloat(this.state.schedule && this.state.schedule.monto ? this.state.schedule.monto : 0.0), '$')}</Text>
             </View>
+            <TouchableOpacity
+              onPress={()=>{
+                this.showScaleAnimationDialog();
+              }}
+            >
+              <View style={styles.verticalAligning}>
+              <Icon
+                name="credit-card"
+                size={18}
+                color="#21243D"
+              />
+              <Text style={styles.textButtonSettlementsAndContract}>Modificar Balance</Text>
+              </View>
+            </TouchableOpacity>
             <View>
-              <Text style={styles.dueDateStyle}>vence {this.state.schedule.fechaPago}</Text>
+              <Text style={styles.dueDateStyle}>vence {this.state.schedule && this.state.schedule.fechaPago ? this.state.schedule.fechaPago : ''}</Text>
             </View>
+            </View>
+            ) : (
+            <View>
+              <View>
+                <Text style={styles.balanceStyle}>BALANCE PENDIENTE NO DISPONIBLE</Text>
+              </View>
+              <View>
+                <Text style={styles.balanceAmountStyle}>{this.convertToDollars(parseFloat(this.state.schedule && this.state.schedule.monto ? this.state.schedule.monto : 0.0), '$')}</Text>
+              </View>
+            </View>
+            )}
+
           </View>
           <View style={styles.containerAddress}>
             <View style={styles.addressContentStyle}>
@@ -335,7 +429,7 @@ const styles = StyleSheet.create({
   },
   containerHeader: {
     width,
-    height: 160,
+    height: 180,
     backgroundColor: '#FFFFFF',
     flex: 1,
     alignItems: 'center',
@@ -486,6 +580,16 @@ const styles = StyleSheet.create({
   },
   depositAmountTextStyle:{
     marginLeft: 10,
+  },
+  dialogContentView: {
+    flex:1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 250,
+  },
+  textInputStyle: {
+    height: 40,
+    paddingLeft: 10,
   },
 
 });

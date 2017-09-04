@@ -106,8 +106,6 @@ class FlexSpaceApp extends Component{
         if (this.state.userName && this.state.password){
           this.setState({showActivityIndicator: !this.state.showActivityIndicator});
           Firebase.loginWithEmail(this.state.userName, this.state.password , (User)=>{
-            console.log(User);
-            console.log(User.uid)
             // get userRole
             Firebase.obtainUserRole(User.uid, (snapshot)=>{
               if (snapshot){
@@ -115,10 +113,11 @@ class FlexSpaceApp extends Component{
                 var screen = '';
                 var props = {};
                 if (snapshot.child('role').val() === 'admin'){
-                  screen = 'AdminScreen';
-                  var clients = snapshot.child('client').val();
+                  screen = 'ClientScreen';
+                  var clients = snapshot.child('cliente').val();
                   for (var clientL in clients){
                     props['cliente'] = clientL;
+                    props['role'] = snapshot.child('role').val();
                     break;
                   }
                 }else {
@@ -126,11 +125,12 @@ class FlexSpaceApp extends Component{
                   var clients = snapshot.child('client').val();
                   for (var clientL in clients){
                     props['cliente'] = clientL;
+                    props['role'] = snapshot.child('role').val();
                     break;
                   }
                 }
-                this.setState({showActivityIndicator: !this.state.showActivityIndicator});
                 navigate(screen, props);
+                this.setState({showActivityIndicator: !this.state.showActivityIndicator});
                 }else {
                 console.log('user without permisions.');
                 this.setState({showActivityIndicator: !this.state.showActivityIndicator});
@@ -381,8 +381,8 @@ export const Stack = StackNavigator({
   }
 },
 {
-    initialRouteName: 'ClientScreen'
-  }
+    initialRouteName: 'FlexSpaceApp'
+}
 );
 
 AppRegistry.registerComponent('FlexSpace', () => Stack);
