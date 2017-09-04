@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   Switch,
   TextInput,
+  KeyboardAvoidingView
 } from 'react-native';
 
 
@@ -26,6 +27,7 @@ import PopupDialog, {
   DialogButton,
   ScaleAnimation,
 } from 'react-native-popup-dialog';
+import { NavigationActions } from 'react-navigation';
 
 const scaleAnimation = new ScaleAnimation();
 const {width, height} = Dimensions.get('window');
@@ -42,7 +44,10 @@ class Client extends Component {
     ),
     headerLeft: (<TouchableOpacity
       onPress={()=>{
-                  console.log('show menu.')
+                      Firebase.logOut(()=>{
+                        const backAction = NavigationActions.back();
+                        navigation.dispatch(backAction)
+                      })
                   }
               }>
               <View style={{paddingLeft: 20}}>
@@ -103,8 +108,6 @@ class Client extends Component {
         depositos: null,
         depositNumber: '',
       }
-      console.log(this.props.navigation.state.params);
-
       this.showScaleAnimationDialog = this.showScaleAnimationDialog.bind(this);
   }
 
@@ -116,6 +119,7 @@ class Client extends Component {
     try {
       if (this.state.clienteKey && this.state.role){
         // get client data
+        console.log('componentDidMount');
         Firebase.obtainClient(this.state.clienteKey, (snapshot)=>{
           Firebase.obtainSchedule(this.state.clienteKey, (snapshotSchedule)=>{
             var currentSchedule = null;
@@ -124,11 +128,10 @@ class Client extends Component {
               index ++;
               var date = new Date(item.child('fechaPago').val());
               var currentDate = new Date();
-              var status = item.child('estado').val();
-              if (status === 'no_enviado' && (currentDate.getMonth()+1 === date.getMonth()+1)){
+              var status = item.child('pagado').val();
+              if (status === false && (currentDate.getMonth()+1 === date.getMonth()+1)){
                 currentSchedule = item.val();
                 currentSchedule['fechaPago'] = (date.getDate() + '/' + (date.getMonth()+1) + '/' + date.getFullYear());
-                currentSchedule['pagado'] =false;
               }
               if (index === snapshotSchedule.numChildren()){
                 Firebase.obtainDepositos(this.state.clienteKey, (snapshotDepositos)=>{
@@ -241,38 +244,41 @@ class Client extends Component {
             />,
           ]}>
             {this.state.schedule ? (
-              <View style={styles.dialogContentView}>
-                <View>
-                  <Text style={styles.balanceAmountStyle}>{this.convertToDollars(parseFloat(this.state.schedule && this.state.schedule.monto ? this.state.schedule.monto : 0.0), '$')}</Text>
-                </View>
-                <View>
-                  <Text>BALANCE PENDIENTE</Text>
-                </View>
-                <View style={[styles.verticalAligning, {alignItems: 'center', justifyContent: 'center', marginTop: 20}]}>
-                <Text>
-                  Balance Pagado:
-                </Text>
-                  <Switch
-                  value={this.state.schedule.pagado}
-                    onValueChange={()=>{
-                      var currentSchedule = this.state.schedule;
-                      currentSchedule.pagado = !currentSchedule.pagado;
-                      this.setState({schedule: currentSchedule});
-                    }}
-                  />
-                </View>
-                <View>
-                <TextInput style={styles.textInputStyle}
-                   autoCapitalize= {'none'}
-                   autoCorrect={false}
-                   placeholder= {'# Transferencia'}
-                   onChangeText={(depositNumber) => this.setState({depositNumber})}
-                   returnKeyType={'go'}
-                   keyboardType={'default'}
-                   value={this.state.depositNumber}
+              <KeyboardAvoidingView
+                behavior='height'
+                style={styles.dialogContentView}
+              >
+              <View>
+                <Text style={styles.balanceAmountStyle}>{this.convertToDollars(parseFloat(this.state.schedule && this.state.schedule.monto ? this.state.schedule.monto : 0.0), '$')}</Text>
+              </View>
+              <View>
+                <Text>BALANCE PENDIENTE</Text>
+              </View>
+              <View style={[styles.verticalAligning, {alignItems: 'center', justifyContent: 'center', marginTop: 20}]}>
+              <Text>
+                Balance Pagado:
+              </Text>
+                <Switch
+                value={this.state.schedule.pagado}
+                  onValueChange={()=>{
+                    var currentSchedule = this.state.schedule;
+                    currentSchedule.pagado = !currentSchedule.pagado;
+                    this.setState({schedule: currentSchedule});
+                  }}
                 />
-                </View>
-              </View>) : (
+              </View>
+              <View>
+              <TextInput style={styles.textInputStyle}
+                 autoCapitalize= {'none'}
+                 autoCorrect={false}
+                 placeholder= {'# Transferencia'}
+                 onChangeText={(depositNumber) => this.setState({depositNumber})}
+                 returnKeyType={'go'}
+                 keyboardType={'default'}
+                 value={this.state.depositNumber}
+              />
+              </View>
+            </KeyboardAvoidingView>) : (
                 <View style={styles.dialogContentView}>
                   <Text>No hay datos del deposito.</Text>
                 </View>)
@@ -503,17 +509,17 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     width,
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
   },
   contactBoxStyle: {
-    width: 100,
+    width: (width/3) - 20,
     height: 80,
     borderRadius: 10,
     backgroundColor: '#C2272F',
     flexDirection: 'column',
     justifyContent: 'space-between',
     paddingVertical: 15,
-    paddingHorizontal: 10,
+    paddingHorizontal: 5,
   },
   contactBoxTitleStyle: {
     color: '#FFFFFF',
@@ -547,7 +553,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   itemContainerSettlementsAndContractList: {
-    width: width - 40,
+    width: width - 20,
     height: 60,
     backgroundColor: '#E4E4E4',
     borderRadius: 10,
@@ -558,7 +564,7 @@ const styles = StyleSheet.create({
   itemContainerSettlements: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: width - 40,
+    width: width - 20,
     justifyContent: 'space-between',
     paddingHorizontal: 10,
   },

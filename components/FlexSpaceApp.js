@@ -129,12 +129,16 @@ class FlexSpaceApp extends Component{
                     break;
                   }
                 }
+                console.log('login');
                 navigate(screen, props);
                 this.setState({showActivityIndicator: !this.state.showActivityIndicator});
                 }else {
                 console.log('user without permisions.');
                 this.setState({showActivityIndicator: !this.state.showActivityIndicator});
               }
+            }, (error)=>{
+              console.log(error);
+              this.setState({errorMessage: error})
             });
 
           }, (errorMessage)=>{
