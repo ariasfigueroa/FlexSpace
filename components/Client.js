@@ -28,6 +28,7 @@ import PopupDialog, {
   ScaleAnimation,
 } from 'react-native-popup-dialog';
 import { NavigationActions } from 'react-navigation';
+import Communications from 'react-native-communications';
 
 const scaleAnimation = new ScaleAnimation();
 const {width, height} = Dimensions.get('window');
@@ -42,7 +43,8 @@ class Client extends Component {
     headerTitle: (
       <Image style={{width: 28, height: 30}} source={require('../resources/img/logoIconWhite.png')}/>
     ),
-    headerLeft: (<TouchableOpacity
+    headerLeft: navigation.state.params.role && navigation.state.params.role !== 'admin' ?
+    (<TouchableOpacity
       onPress={()=>{
                       Firebase.logOut(()=>{
                         const backAction = NavigationActions.back();
@@ -57,7 +59,22 @@ class Client extends Component {
                   size={20}
                 />
               </View>
-    </TouchableOpacity>),
+    </TouchableOpacity>) :
+    (<TouchableOpacity
+      onPress={()=>{
+                  const backAction = NavigationActions.back();
+                  navigation.dispatch(backAction);
+                  }
+              }>
+              <View style={{paddingLeft: 20}}>
+                <Icon
+                  name= "back"
+                  color= "#FFFFFF"
+                  size={20}
+                />
+              </View>
+    </TouchableOpacity>)
+    ,
     headerRight: navigation.state.params.role && navigation.state.params.role === 'admin' ? (
       <View style={{flexDirection: 'row', marginRight: 20, alignItems: 'flex-end'}}>
         <TouchableOpacity
@@ -78,7 +95,9 @@ class Client extends Component {
 
         <TouchableOpacity
           onPress={() => {
-              console.log('caling');
+            Alert.alert('Enlazar llamada', 'Te comunicaremos al: (479)276 9522',  [ {text: 'No', onPress: () => console.log('No Pressed'), style: 'cancel'}, {text: 'Si', onPress: () => {
+              Communications.phonecall('4792769522', false);
+            }},],  { cancelable: false });
             }
           }
         >
@@ -215,7 +234,6 @@ class Client extends Component {
         <StatusBar
            barStyle="light-content"
         />
-
         <PopupDialog
           dismissOnTouchOutside = {true}
           dialogStyle={{width: width - 40, height: 340}}
@@ -244,10 +262,7 @@ class Client extends Component {
             />,
           ]}>
             {this.state.schedule ? (
-              <KeyboardAvoidingView
-                behavior='height'
-                style={styles.dialogContentView}
-              >
+            <View style={styles.dialogContentView}>
               <View>
                 <Text style={styles.balanceAmountStyle}>{this.convertToDollars(parseFloat(this.state.schedule && this.state.schedule.monto ? this.state.schedule.monto : 0.0), '$')}</Text>
               </View>
@@ -278,7 +293,7 @@ class Client extends Component {
                  value={this.state.depositNumber}
               />
               </View>
-            </KeyboardAvoidingView>) : (
+            </View>) : (
                 <View style={styles.dialogContentView}>
                   <Text>No hay datos del deposito.</Text>
                 </View>)
@@ -303,20 +318,20 @@ class Client extends Component {
             <View>
               <Text style={styles.balanceAmountStyle}>{this.convertToDollars(parseFloat(this.state.schedule && this.state.schedule.monto ? this.state.schedule.monto : 0.0), '$')}</Text>
             </View>
-            <TouchableOpacity
-              onPress={()=>{
+            {this.state.role && this.state.role === 'admin' ? (
+              <TouchableOpacity
+                onPress={()=>{
                 this.showScaleAnimationDialog();
-              }}
-            >
-              <View style={styles.verticalAligning}>
-              <Icon
-                name="credit-card"
-                size={18}
-                color="#21243D"
-              />
-              <Text style={styles.textButtonSettlementsAndContract}>Modificar Balance</Text>
-              </View>
-            </TouchableOpacity>
+                }}>
+                <View style={styles.verticalAligning}>
+                  <Icon
+                   name="credit-card"
+                   size={18}
+                   color="#21243D"
+                   />
+                  <Text style={styles.textButtonSettlementsAndContract}>Modificar Balance</Text>
+                </View>
+              </TouchableOpacity>) : (<View/>)}
             <View>
               <Text style={styles.dueDateStyle}>vence {this.state.schedule && this.state.schedule.fechaPago ? this.state.schedule.fechaPago : ''}</Text>
             </View>

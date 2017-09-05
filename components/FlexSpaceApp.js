@@ -113,7 +113,7 @@ class FlexSpaceApp extends Component{
                 var screen = '';
                 var props = {};
                 if (snapshot.child('role').val() === 'admin'){
-                  screen = 'ClientScreen';
+                  screen = 'AdminScreen';
                   var clients = snapshot.child('cliente').val();
                   for (var clientL in clients){
                     props['cliente'] = clientL;
@@ -131,7 +131,7 @@ class FlexSpaceApp extends Component{
                 }
                 console.log('login');
                 navigate(screen, props);
-                this.setState({showActivityIndicator: !this.state.showActivityIndicator});
+                this.setState({showActivityIndicator: !this.state.showActivityIndicator, userName: '', password: ''});
                 }else {
                 console.log('user without permisions.');
                 this.setState({showActivityIndicator: !this.state.showActivityIndicator});
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
   },
   loginView: {
-    width: width - 100,
+    width: width - 40,
     height:100,
     backgroundColor: "rgba(255,255,255,0.80)",
     borderRadius: 10,
