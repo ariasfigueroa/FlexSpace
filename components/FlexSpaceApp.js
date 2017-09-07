@@ -138,18 +138,18 @@ class FlexSpaceApp extends Component{
               }
             }, (error)=>{
               console.log(error);
-              this.setState({errorMessage: error})
+              this.setState({errorMessage: error, showActivityIndicator: !this.state.showActivityIndicator})
             });
 
           }, (errorMessage)=>{
             console.log(errorMessage);
-            this.setState({errorMessage: errorMessage.message})
+            this.setState({errorMessage: errorMessage.message, showActivityIndicator: !this.state.showActivityIndicator})
           });
         } else {
-          this.setState({errorMessage: 'Correo Eletrónico y Contraseña requeridos.'});
+          this.setState({errorMessage: 'Correo Eletrónico y Contraseña requeridos.', showActivityIndicator: !this.state.showActivityIndicator});
         }
       } catch (error) {
-        this.setState({errorMessage: error.message});
+        this.setState({errorMessage: error.message, showActivityIndicator: !this.state.showActivityIndicator});
       }
     }
 

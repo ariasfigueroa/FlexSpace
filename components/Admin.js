@@ -51,8 +51,8 @@ class Admin extends Component {
     this.state={
       accountsOrClientsSelected: 'C',
       showActivityIndicator: true,
-      clientes: [{key: 1}],
-      cuentasPendientes: [{key: 1}],
+      clientes: null,
+      cuentasPendientes: null,
     }
   }
 
@@ -67,11 +67,25 @@ class Admin extends Component {
             var itemL = item.val();
             itemL['key'] = item.key;
             clientes.push(itemL);
-            console.log(itemL);
-
             if (index === snapshot.numChildren()){
               // request accounts
-              this.setState({clientes, showActivityIndicator: false})
+              Firebase.obtainRequestedAccounts((snapshotRequestedAccounts)=>{
+                var cuentasPendientes = [];
+                var indexCuentasPendientes = 0;
+                snapshotRequestedAccounts.forEach((item)=>{
+                  indexCuentasPendientes ++;
+                  var itemCuentasPendientesL = item.val();
+                  if (itemCuentasPendientesL.estatus === 'solicitud_enviada'){
+                    itemCuentasPendientesL['key'] = item.key;
+                    cuentasPendientes.push(itemCuentasPendientesL);
+                  }
+                  if (indexCuentasPendientes === snapshotRequestedAccounts.numChildren()){
+                    this.setState({clientes, cuentasPendientes, showActivityIndicator: false})
+                  }
+                });
+              }, (error)=>{
+                console.log(error);
+              });
             }
           })
         }else {
@@ -131,10 +145,10 @@ class Admin extends Component {
               <View style={styles.itemContainerClients}>
                 <View style={styles.clientDataContainer}>
                   <View style={styles.clientDataTextContainer}>
-                    <Text style={styles.clientDataTextStyle}>Barcel</Text>
+                    <Text style={styles.clientDataTextStyle}>{item.clienteNombre}</Text>
                   </View>
                   <View style={styles.clientDataTextContainer}>
-                    <Text style={styles.clientDataTextStyle}>ariasfigueroa@gmail.com</Text>
+                    <Text style={styles.clientDataTextStyle}>{item.estatus}</Text>
                   </View>
                 </View>
                 </View>
@@ -152,7 +166,29 @@ class Admin extends Component {
                     <View style={styles.clientDataTextContainer}>
                       <TouchableOpacity
                         onPress={()=>{
-                          console.log('rechazar');
+                          this.setState({showActivityIndicator: true});
+                          item['estatus'] = 'rechazada';
+                          Firebase.rejectAccount(item, ()=>{
+                            Firebase.obtainRequestedAccounts((snapshotRequestedAccounts)=>{
+                              var cuentasPendientes = [];
+                              var indexCuentasPendientes = 0;
+                              snapshotRequestedAccounts.forEach((item)=>{
+                                indexCuentasPendientes ++;
+                                var itemCuentasPendientesL = item.val();
+                                if (itemCuentasPendientesL.estatus === 'solicitud_enviada'){
+                                  itemCuentasPendientesL['key'] = item.key;
+                                  cuentasPendientes.push(itemCuentasPendientesL);
+                                }
+                                if (indexCuentasPendientes === snapshotRequestedAccounts.numChildren()){
+                                  this.setState({cuentasPendientes, showActivityIndicator: false})
+                                }
+                              });
+                            }, (error)=>{
+                              console.log(error);
+                            });
+                          }, (error)=>{
+                            console.log(error);
+                          });
                         }}
                       >
                       <Text style={[styles.clientDataTextStyle]}>Rechazar</Text>

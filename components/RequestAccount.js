@@ -32,6 +32,7 @@ class RequestAccount extends Component {
     super(props);
     this.state = {
       userName: '',
+      password: '',
       cliente: '',
       clienteKey: '',
       errorMessage: null,
@@ -49,12 +50,12 @@ class RequestAccount extends Component {
 
   requestNewAccount(){
     try{
-      if (this.state.userName && this.state.clienteKey && this.state.cliente){
+      if (this.state.userName && this.state.password && this.state.clienteKey && this.state.cliente){
         this.setState({
           showActivityIndicator: !this.state.showActivityIndicator
         });
         // Send request to create the account.
-        let object = {email: this.state.userName, clienteKey: this.state.clienteKey}
+        let object = {email: this.state.userName, password: this.state.password, clienteKey: this.state.clienteKey, clienteNombre: cliente}
         Firebase.requestNewAccount(object, ()=>{
           // success
           Alert.alert('Enviado', 'Solicitud enviada.', [ {text: 'OK', onPress: () => {
@@ -156,7 +157,22 @@ class RequestAccount extends Component {
                      returnKeyType={'next'}
                      keyboardType={'email-address'}
                      ref={(userNameInput) => this.userNameInput = userNameInput}
+                     onSubmitEditing={() => this.passwordInput.focus()}
                      value={this.state.userName}
+                     onFocus={this._resetErrors}
+                  />
+                </View>
+                <View style={[styles.loginField]}>
+                  <TextInput style={styles.textInputStyle}
+                     autoCapitalize= {'none'}
+                     autoCorrect={false}
+                     placeholder= {'Contraseña'}
+                     onChangeText={(password) => this.setState({password})}
+                     returnKeyType={'go'}
+                     secureTextEntry={true}
+                     keyboardType={'default'}
+                     ref={(passwordInput) => this.passwordInput = passwordInput}
+                     value={this.state.password}
                      onFocus={this._resetErrors}
                   />
                 </View>
@@ -233,7 +249,7 @@ const styles = StyleSheet.create({
   },
   loginView: {
     width: width - 100,
-    height:50,
+    height:100,
     backgroundColor: "rgba(255,255,255,0.80)",
     borderRadius: 5,
     flex: 1,
