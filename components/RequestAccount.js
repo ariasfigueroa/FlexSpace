@@ -183,16 +183,16 @@ class RequestAccount extends Component {
                 </View>
                 <View style={[styles.loginField]}>
                   <TextInput style={styles.textInputStyle}
-                     autoCapitalize= {'none'}
-                     autoCorrect={false}
-                     placeholder= {'Contraseña'}
-                     onChangeText={(password) => this.setState({password})}
-                     returnKeyType={'go'}
-                     secureTextEntry={true}
-                     keyboardType={'default'}
-                     ref={(passwordInput) => this.passwordInput = passwordInput}
-                     value={this.state.password}
-                     onFocus={this._resetErrors}
+                    autoCapitalize= {'none'}
+                    autoCorrect={false}
+                    placeholder= {'Contraseña'}
+                    onChangeText={(password) => this.setState({password})}
+                    returnKeyType={'go'}
+                    secureTextEntry={true}
+                    keyboardType={'default'}
+                    ref={(passwordInput) => this.passwordInput = passwordInput}
+                    value={this.state.password}
+                    onFocus={this._resetErrors}
                   />
                 </View>
               </View>

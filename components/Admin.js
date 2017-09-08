@@ -172,7 +172,18 @@ class Admin extends Component {
                                     cuentasPendientes.push(itemCuentasPendientesL);
                                   }
                                   if (indexCuentasPendientes === snapshotRequestedAccounts.numChildren()){
-                                    this.setState({cuentasPendientes, showActivityIndicator: false})
+                                    //update cliente
+                                    Firebase.obtainClient(item.clienteKey, (currentClient)=>{
+                                      var currentTokends = currentClient.child('tokens').val();
+                                      currentTokends.push({token: item.token, uid: item.key});
+                                      Firebase.setTokensToClient(currentTokends, item.clienteKey, ()=>{
+                                        this.setState({cuentasPendientes, showActivityIndicator: false});
+                                      }, (errorTokens)=>{
+                                        console.log(errorTokens);
+                                      });
+                                    }, (errorClient) =>{
+                                        console.log(errorClient);
+                                    });
                                   }
                                 });
                               }, (error)=>{
