@@ -75,12 +75,14 @@ class Client extends Component {
               </View>
     </TouchableOpacity>)
     ,
-    headerRight: navigation.state.params.role && navigation.state.params.role === 'admin' ? (
+    headerRight: navigation.state.params.role && navigation.state.params.role !== 'admin' ? (
       <View style={{flexDirection: 'row', marginRight: 20, alignItems: 'flex-end'}}>
         <TouchableOpacity
         style={{marginRight: 30}}
           onPress={()=>{
-            console.log('emailing');
+            Alert.alert('Enviar Email', 'Esto abrira una opcion.',  [ {text: 'No', onPress: () => console.log('No Pressed'), style: 'cancel'}, {text: 'Si', onPress: () => {
+              Communications.email(['contacto@flexspace.com'], null, null, null, 'Soporte');
+            }},],  { cancelable: false });
           }
         }
         >
@@ -236,72 +238,6 @@ class Client extends Component {
         <StatusBar
            barStyle="light-content"
         />
-        <PopupDialog
-          dismissOnTouchOutside = {true}
-          dialogStyle={{width: width - 40, height: 340}}
-          ref={(popupDialog) => {
-            this.scaleAnimationDialog = popupDialog;
-          }}
-          dialogAnimation={scaleAnimation}
-          dialogTitle={<DialogTitle title="Modificar Balance" />}
-          actions={[
-            <DialogButton
-              text="Guardar"
-              onPress={() => {
-                console.log('Save');
-                //this.updateBalance();
-                this.scaleAnimationDialog.dismiss();
-              }}
-              key="button-1"
-            />,
-            <DialogButton
-              text="Cerrar"
-              onPress={() => {
-                console.log('dismiss');
-                this.scaleAnimationDialog.dismiss();
-              }}
-              key="button-2"
-            />,
-          ]}>
-            {this.state.schedule ? (
-            <View style={styles.dialogContentView}>
-              <View>
-                <Text style={styles.balanceAmountStyle}>{this.convertToDollars(parseFloat(this.state.schedule && this.state.schedule.monto ? this.state.schedule.monto : 0.0), '$')}</Text>
-              </View>
-              <View>
-                <Text>BALANCE PENDIENTE</Text>
-              </View>
-              <View style={[styles.verticalAligning, {alignItems: 'center', justifyContent: 'center', marginTop: 20}]}>
-              <Text>
-                Balance Pagado:
-              </Text>
-                <Switch
-                value={this.state.schedule.pagado}
-                  onValueChange={()=>{
-                    var currentSchedule = this.state.schedule;
-                    currentSchedule.pagado = !currentSchedule.pagado;
-                    this.setState({schedule: currentSchedule});
-                  }}
-                />
-              </View>
-              <View>
-              <TextInput style={styles.textInputStyle}
-                 autoCapitalize= {'none'}
-                 autoCorrect={false}
-                 placeholder= {'# Transferencia'}
-                 onChangeText={(depositNumber) => this.setState({depositNumber})}
-                 returnKeyType={'go'}
-                 keyboardType={'default'}
-                 value={this.state.depositNumber}
-              />
-              </View>
-            </View>) : (
-                <View style={styles.dialogContentView}>
-                  <Text>No hay datos del deposito.</Text>
-                </View>)
-              }
-      </PopupDialog>
-
         <ScrollView>
           <View style={styles.containerHeader}>
             <View style={styles.avaterContainer}>
@@ -320,20 +256,6 @@ class Client extends Component {
             <View>
               <Text style={styles.balanceAmountStyle}>{this.convertToDollars(parseFloat(this.state.schedule && this.state.schedule.monto ? this.state.schedule.monto : 0.0), '$')}</Text>
             </View>
-            {this.state.role && this.state.role === 'admin' ? (
-              <TouchableOpacity
-                onPress={()=>{
-                this.showScaleAnimationDialog();
-                }}>
-                <View style={styles.verticalAligning}>
-                  <Icon
-                   name="credit-card"
-                   size={18}
-                   color="#21243D"
-                   />
-                  <Text style={styles.textButtonSettlementsAndContract}>Modificar Balance</Text>
-                </View>
-              </TouchableOpacity>) : (<View/>)}
             <View>
               <Text style={styles.dueDateStyle}>vence {this.state.schedule && this.state.schedule.fechaPago ? this.state.schedule.fechaPago : ''}</Text>
             </View>
@@ -407,6 +329,21 @@ class Client extends Component {
             </View>
             {this.state.settlementOrContractSelected === 'D' ? (
               <View style={styles.containerSettlementsAndContractList}>
+                {this.state.role && this.state.role === 'admin' ? (
+                  <TouchableOpacity
+                    onPress={()=>{
+                      let { navigation } = this.props;
+                      navigation.navigate('AddDepositScreen',{schedule: this.state.schedule});
+                    }}>
+                    <View style={styles.verticalAligning}>
+                      <Icon
+                       name="credit-card"
+                       size={18}
+                       color="#6AB817"
+                       />
+                      <Text style={[styles.textButtonSettlementsAndContract, {color: '#6AB817', marginBottom: 10}]}>Ingresar Depósito</Text>
+                    </View>
+                  </TouchableOpacity>) : (<View/>)}
                 {depositosList}
               </View>
             ) : (

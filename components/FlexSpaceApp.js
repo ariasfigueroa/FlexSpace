@@ -22,6 +22,7 @@ import Client from './Client';
 import Admin from './Admin';
 import ResetPassword from './ResetPassword';
 import RequestAccount from './RequestAccount';
+import AddDeposit from './AddDeposit';
 
 const {width, height} = Dimensions.get('window');
 class FlexSpaceApp extends Component{
@@ -384,6 +385,9 @@ export const Stack = StackNavigator({
   },
   RequestAccountScreen: {
     screen: RequestAccount,
+  },
+  AddDepositScreen:{
+    screen: AddDeposit,
   }
 },
 {
