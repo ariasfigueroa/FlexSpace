@@ -148,7 +148,7 @@ class Admin extends Component {
                     <Text style={styles.clientDataTextStyle}>{item.clienteNombre}</Text>
                   </View>
                   <View style={styles.clientDataTextContainer}>
-                    <Text style={styles.clientDataTextStyle}>{item.estatus}</Text>
+                    <Text style={styles.clientDataTextStyle}>{item.email}</Text>
                   </View>
                 </View>
                 </View>
@@ -157,7 +157,33 @@ class Admin extends Component {
                     <View style={styles.clientDataTextContainer}>
                       <TouchableOpacity
                         onPress={()=>{
-                          console.log('aceptar');
+                          this.setState({showActivityIndicator: true});
+                          item['estatus'] = 'aceptada';
+                          Firebase.updateAccount(item, ()=>{
+                            Firebase.createUserRole(item, ()=>{
+                              Firebase.obtainRequestedAccounts((snapshotRequestedAccounts)=>{
+                                var cuentasPendientes = [];
+                                var indexCuentasPendientes = 0;
+                                snapshotRequestedAccounts.forEach((itemAccount)=>{
+                                  indexCuentasPendientes ++;
+                                  var itemCuentasPendientesL = itemAccount.val();
+                                  if (itemCuentasPendientesL.estatus === 'solicitud_enviada'){
+                                    itemCuentasPendientesL['key'] = itemAccount.key;
+                                    cuentasPendientes.push(itemCuentasPendientesL);
+                                  }
+                                  if (indexCuentasPendientes === snapshotRequestedAccounts.numChildren()){
+                                    this.setState({cuentasPendientes, showActivityIndicator: false})
+                                  }
+                                });
+                              }, (error)=>{
+                                console.log(error);
+                              });
+                            }, (errorUserRole)=>{
+                                console.log(errorUserRole);
+                            });
+                          }, (error)=>{
+                            console.log(error);
+                          });
                         }}
                       >
                       <Text style={[styles.clientDataTextStyle, {color: 'green'}]}>Aceptar</Text>
@@ -168,7 +194,7 @@ class Admin extends Component {
                         onPress={()=>{
                           this.setState({showActivityIndicator: true});
                           item['estatus'] = 'rechazada';
-                          Firebase.rejectAccount(item, ()=>{
+                          Firebase.updateAccount(item, ()=>{
                             Firebase.obtainRequestedAccounts((snapshotRequestedAccounts)=>{
                               var cuentasPendientes = [];
                               var indexCuentasPendientes = 0;
@@ -234,7 +260,7 @@ class Admin extends Component {
                   size={18}
                   color="#21243D"
                 />
-                <Text style={styles.textButtonAccountAndClients}>Cuentas</Text>
+                <Text style={styles.textButtonAccountAndClients}>Cuentas Pendientes</Text>
               </View>
             </TouchableOpacity>
           </View>

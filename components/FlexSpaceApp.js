@@ -38,6 +38,7 @@ class FlexSpaceApp extends Component{
       password: '',
       errorMessage: null,
       showActivityIndicator: false,
+      token: '',
     }
     this._resetErrors = this._resetErrors.bind(this)
   }
@@ -45,7 +46,7 @@ class FlexSpaceApp extends Component{
     componentDidMount() {
       FCM.requestPermissions(); // for iOS
       FCM.getFCMToken().then(token => {
-          console.log('Token: ', token)
+          this.setState({token});
           // store fcm token in your server
       });
       this.notificationListener = FCM.on(FCMEvent.Notification, async (notif) => {
@@ -80,7 +81,8 @@ class FlexSpaceApp extends Component{
           }
       });
       this.refreshTokenListener = FCM.on(FCMEvent.RefreshToken, (token) => {
-          console.log(token)
+          console.log(token);
+          this.setState({token});
           // fcm token may not be available on first load, catch it here
       });
       }
@@ -122,19 +124,19 @@ class FlexSpaceApp extends Component{
                   }
                 }else {
                   screen = 'ClientScreen';
-                  var clients = snapshot.child('client').val();
+                  var clients = snapshot.child('cliente').val();
                   for (var clientL in clients){
                     props['cliente'] = clientL;
                     props['role'] = snapshot.child('role').val();
                     break;
                   }
                 }
-                console.log('login');
+                console.log(props);
                 navigate(screen, props);
                 this.setState({showActivityIndicator: !this.state.showActivityIndicator, userName: '', password: ''});
                 }else {
                 console.log('user without permisions.');
-                this.setState({showActivityIndicator: !this.state.showActivityIndicator});
+                this.setState({errorMessage: 'Usuario sin permisos.', showActivityIndicator: !this.state.showActivityIndicator});
               }
             }, (error)=>{
               console.log(error);
@@ -250,7 +252,7 @@ class FlexSpaceApp extends Component{
                 <TouchableOpacity
                   onPress={()=>{
                   const { navigate } = this.props.navigation;
-                  navigate('RequestAccountScreen');
+                  navigate('RequestAccountScreen',{token: this.state.token});
                   }
                 }>
                   <Text style={styles.textInsideButtons}>

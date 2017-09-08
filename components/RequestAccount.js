@@ -38,6 +38,7 @@ class RequestAccount extends Component {
       errorMessage: null,
       showActivityIndicator: true,
       clientes: null,
+      token: '',
     }
     this._resetErrors = this._resetErrors.bind(this)
     this.goBack = this.goBack.bind(this);
@@ -48,31 +49,49 @@ class RequestAccount extends Component {
       this.setState({errorMessage: null})
   }
 
+  componentWillMount(){
+    this.setState({token: this.props.navigation.state.params.token});
+  }
+
   requestNewAccount(){
     try{
       if (this.state.userName && this.state.password && this.state.clienteKey && this.state.cliente){
         this.setState({
           showActivityIndicator: !this.state.showActivityIndicator
         });
-        // Send request to create the account.
-        let object = {email: this.state.userName, password: this.state.password, clienteKey: this.state.clienteKey, clienteNombre: cliente}
-        Firebase.requestNewAccount(object, ()=>{
-          // success
-          Alert.alert('Enviado', 'Solicitud enviada.', [ {text: 'OK', onPress: () => {
-            this.setState({
-              showActivityIndicator: !this.state.showActivityIndicator
+        let object = {email: this.state.userName, password: this.state.password, clienteKey: this.state.clienteKey, clienteNombre: this.state.cliente};
+        Firebase.createUser(object, (user)=>{
+          console.log('here');
+          if (user){
+            // Send request to create the account.
+            object['key'] = user.uid;
+            object['token'] = this.state.token;
+
+            Firebase.requestNewAccount(object, ()=>{
+              // success
+              Alert.alert('Enviado', 'Solicitud enviada.', [ {text: 'OK', onPress: () => {
+                Firebase.logOut(()=>{
+                  this.setState({
+                    showActivityIndicator: !this.state.showActivityIndicator
+                  });
+                  this.goBack();
+                });
+              }, style: 'cancel'}],  { cancelable: false });
+            }, (error) => {
+              // error
+              this.setState({errorMessage: error, showActivityIndicator: !this.state.showActivityIndicator});
             });
-            this.goBack();
-          }, style: 'cancel'}],  { cancelable: false });
-        }, (error) => {
-          // error
-          this.setState({errorMessage: error});
+          }else {
+            this.setState({errorMessage: 'Usuario no creado.', showActivityIndicator: !this.state.showActivityIndicator});
+          }
+        }, (errorUser)=>{
+          this.setState({errorMessage: errorUser, showActivityIndicator: !this.state.showActivityIndicator});
         });
       } else {
-        this.setState({errorMessage: 'Correo Electrónico es requerido y Empresa son requeridos'});
+        this.setState({errorMessage: 'Correo Electrónico es requerido y Empresa son requeridos', showActivityIndicator: !this.state.showActivityIndicator});
       }
     } catch(error){
-      this.setState({errorMessage: error.message});
+      this.setState({errorMessage: error.message, showActivityIndicator: !this.state.showActivityIndicator});
     }
   }
 

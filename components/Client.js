@@ -132,6 +132,8 @@ class Client extends Component {
 
   componentWillMount(){
     this.setState({clienteKey: this.props.navigation.state.params.cliente, role: this.props.navigation.state.params.role});
+    console.log(this.props.navigation.state.params.cliente);
+    console.log(this.props.navigation.state.params.role);
   }
 
   componentDidMount(){
