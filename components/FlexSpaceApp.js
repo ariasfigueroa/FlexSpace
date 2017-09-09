@@ -23,6 +23,7 @@ import Admin from './Admin';
 import ResetPassword from './ResetPassword';
 import RequestAccount from './RequestAccount';
 import AddDeposit from './AddDeposit';
+import PDFContainer from './PDFContainer';
 
 const {width, height} = Dimensions.get('window');
 class FlexSpaceApp extends Component{
@@ -118,9 +119,9 @@ class FlexSpaceApp extends Component{
                 if (snapshot.child('role').val() === 'admin'){
                   screen = 'AdminScreen';
                   var clients = snapshot.child('cliente').val();
+                  props['role'] = snapshot.child('role').val();
                   for (var clientL in clients){
                     props['cliente'] = clientL;
-                    props['role'] = snapshot.child('role').val();
                     break;
                   }
                 }else {
@@ -388,6 +389,9 @@ export const Stack = StackNavigator({
   },
   AddDepositScreen:{
     screen: AddDeposit,
+  },
+  PDFContainerScreen:{
+    screen: PDFContainer,
   }
 },
 {

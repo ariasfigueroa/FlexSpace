@@ -59,7 +59,7 @@ class AddDeposit extends Component {
   }
 
   saveDeposit(){
-    if (this.state.depositNumber && this.state.monto){
+    if (this.state.depositNumber && this.state.monto && this.state.schedule){
       var transferencia = {};
       transferencia['fechaPago'] = this.state.schedule.fechaPago;
 
@@ -73,11 +73,16 @@ class AddDeposit extends Component {
       transferencia['transferencia'] = this.state.depositNumber;
 
       Firebase.saveDeposit(transferencia, this.props.navigation.state.params.clienteKey, ()=>{
-        Alert.alert('Depósito', 'Transferencia guardada satisfactoriamente.',  [ {text: 'Ok', onPress: () => {
-          this.props.navigation.state.params.callback();
-          const backAction = NavigationActions.back();
-          this.props.navigation.dispatch(backAction);
-        }},],  { cancelable: false });
+        // update schedule
+        Firebase.updateSchedule(this.state.schedule, this.props.navigation.state.params.clienteKey, ()=>{
+          Alert.alert('Depósito', 'Transferencia guardada satisfactoriamente.',  [ {text: 'Ok', onPress: () => {
+            this.props.navigation.state.params.callback();
+            const backAction = NavigationActions.back();
+            this.props.navigation.dispatch(backAction);
+          }},],  { cancelable: false });
+        }, (errorUpdateSchedule)=>{
+          console.log(errorUpdateSchedule);
+        });
       }, (error)=>{
         console.log(error);
       })
@@ -159,9 +164,11 @@ class AddDeposit extends Component {
           <TouchableOpacity
             onPress={this.saveDeposit.bind(this)}
           >
-           <Text style={styles.textInsideButtons}>
-             Guardar
-           </Text>
+            <View>
+              <Text style={styles.textInsideButtons}>
+                Guardar
+              </Text>
+            </View>
           </TouchableOpacity>
 
         </View>) : (

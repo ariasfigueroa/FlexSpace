@@ -164,11 +164,11 @@ class Client extends Component {
                     var itemL = itemDeposito.val();
                     itemL['key'] = indexDepositos-1;
                     depositos.push(itemL);
-                    if (itemDeposito.child('fechaPago').val() === item.child('fechaPago').val()){
+                    if (itemDeposito.child('fechaPago').val() === item.child('fechaPago').val() && status === false){
                       currentSchedule['monto'] = (currentSchedule.monto - itemL.monto);
                     }
                     if (indexDepositos === snapshotDepositos.numChildren()){
-                      this.setState({cliente: snapshot.val(), schedule: currentSchedule, depositos, showActivityIndicator: false, });
+                      this.setState({cliente: snapshot.val(), schedule: status ? currentSchedule : null, depositos, showActivityIndicator: false, });
                     }
                   });
                 }, (errorDepositos)=>{
@@ -178,6 +178,7 @@ class Client extends Component {
             });
           }, (errorSchedule)=>{
             console.log(errorSchedule);
+            this.setState({cliente: snapshot.val(), showActivityIndicator: false, });
           });
         }, (error)=>{
           console.log(error);
@@ -217,28 +218,32 @@ class Client extends Component {
         </View>
       )
     } else {
-      const depositosList = this.state.depositos
-      .map((item)=>{
-          return(
-            <View style={styles.itemContainerSettlementsAndContractList} key={item.key}>
-              <View style={styles.itemContainerSettlements}>
-                <View style={styles.depositDataContainer}>
-                  <IconMaterialCommunityIcons
-                    name="arrow-top-right"
-                    size={40}
-                    color="#6AB817"
-                  />
-                  <View style={styles.depositDataTextContainer}>
-                    <Text style={styles.depositDataTextStyle}>Transf. # {item.transferencia}</Text>
-                    <Text style={styles.depositDataTextDateStyle}>{item.fechaTransferencia} {item.horaTransferencia}</Text>
-                  </View>
+      var depositosList = null;
+      if (this.state.depositos){
+        depositosList = this.state.depositos
+        .map((item)=>{
+            return(
+              <View style={styles.itemContainerSettlementsAndContractList} key={item.key}>
+                <View style={styles.itemContainerSettlements}>
+                  <View style={styles.depositDataContainer}>
+                    <IconMaterialCommunityIcons
+                      name="arrow-top-right"
+                      size={40}
+                      color="#6AB817"
+                    />
+                    <View style={styles.depositDataTextContainer}>
+                      <Text style={styles.depositDataTextStyle}>Transf. # {item.transferencia}</Text>
+                      <Text style={styles.depositDataTextDateStyle}>{item.fechaTransferencia} {item.horaTransferencia}</Text>
+                    </View>
 
+                  </View>
+                  <Text style={styles.depositDataTextStyle}>+ {this.convertToDollars(parseFloat(item.monto ? item.monto : 0.0), '$')}</Text>
                 </View>
-                <Text style={styles.depositDataTextStyle}>+ {this.convertToDollars(parseFloat(item.monto ? item.monto : 0.0), '$')}</Text>
               </View>
-            </View>
-          );
-      });
+            );
+        });
+      }
+
       return(
         <View style={styles.container}>
         <StatusBar
@@ -269,7 +274,7 @@ class Client extends Component {
             ) : (
             <View>
               <View>
-                <Text style={styles.balanceStyle}>BALANCE PENDIENTE NO DISPONIBLE</Text>
+                <Text style={styles.balanceStyle}>NO HAY BALANCE PENDIENTE</Text>
               </View>
               <View>
                 <Text style={styles.balanceAmountStyle}>{this.convertToDollars(parseFloat(this.state.schedule && this.state.schedule.monto ? this.state.schedule.monto : 0.0), '$')}</Text>
@@ -335,7 +340,7 @@ class Client extends Component {
             </View>
             {this.state.settlementOrContractSelected === 'D' ? (
               <View style={styles.containerSettlementsAndContractList}>
-                {this.state.role && this.state.role === 'admin' ? (
+                {this.state.role && this.state.role === 'admin' && this.state.schedule ? (
                   <TouchableOpacity
                     onPress={()=>{
                       let { navigation } = this.props;
@@ -354,7 +359,12 @@ class Client extends Component {
               </View>
             ) : (
               <View style={styles.containerSettlementsAndContractList}>
-                <TouchableOpacity>
+                <TouchableOpacity
+                  onPress={()=>{
+                    let {navigation} = this.props;
+                    navigation.navigate('PDFContainerScreen', {contrato: this.state.cliente.contrato, contratoNombre: this.state.cliente.contratoNombre});
+                  }}
+                >
                 <View style={styles.itemContainerSettlementsAndContractList}>
                   <View style={styles.itemContainerSettlements}>
                     <View style={styles.depositDataContainer}>
