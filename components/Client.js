@@ -142,7 +142,6 @@ class Client extends Component {
     try {
       if (this.state.clienteKey && this.state.role){
         // get client data
-        console.log('componentDidMount');
         Firebase.obtainClient(this.state.clienteKey, (snapshot)=>{
           Firebase.obtainSchedule(this.state.clienteKey, (snapshotSchedule)=>{
             var currentSchedule = null;
@@ -154,7 +153,7 @@ class Client extends Component {
               var status = item.child('pagado').val();
               if (status === false && (currentDate.getMonth()+1 === date.getMonth()+1)){
                 currentSchedule = item.val();
-                currentSchedule['fechaPago'] = (date.getDate() + '/' + (date.getMonth()+1) + '/' + date.getFullYear());
+                currentSchedule['fechaPagoDateFormat'] = (date.getDate() + '/' + (date.getMonth()+1) + '/' + date.getFullYear());
               }
               if (index === snapshotSchedule.numChildren()){
                 Firebase.obtainDepositos(this.state.clienteKey, (snapshotDepositos)=>{
@@ -162,9 +161,12 @@ class Client extends Component {
                   var depositos = [];
                   snapshotDepositos.forEach((itemDeposito)=>{
                     indexDepositos ++;
-                    var item = itemDeposito.val();
-                    item['key'] = indexDepositos-1;
-                    depositos.push(item);
+                    var itemL = itemDeposito.val();
+                    itemL['key'] = indexDepositos-1;
+                    depositos.push(itemL);
+                    if (itemDeposito.child('fechaPago').val() === item.child('fechaPago').val()){
+                      currentSchedule['monto'] = (currentSchedule.monto - itemL.monto);
+                    }
                     if (indexDepositos === snapshotDepositos.numChildren()){
                       this.setState({cliente: snapshot.val(), schedule: currentSchedule, depositos, showActivityIndicator: false, });
                     }
@@ -194,6 +196,10 @@ class Client extends Component {
 
   showScaleAnimationDialog() {
     this.scaleAnimationDialog.show();
+  }
+
+  updateDeposits (){
+    this.componentDidMount();
   }
 
   render(){
@@ -257,7 +263,7 @@ class Client extends Component {
               <Text style={styles.balanceAmountStyle}>{this.convertToDollars(parseFloat(this.state.schedule && this.state.schedule.monto ? this.state.schedule.monto : 0.0), '$')}</Text>
             </View>
             <View>
-              <Text style={styles.dueDateStyle}>vence {this.state.schedule && this.state.schedule.fechaPago ? this.state.schedule.fechaPago : ''}</Text>
+              <Text style={styles.dueDateStyle}>vence {this.state.schedule && this.state.schedule.fechaPagoDateFormat ? this.state.schedule.fechaPagoDateFormat : ''}</Text>
             </View>
             </View>
             ) : (
@@ -333,7 +339,7 @@ class Client extends Component {
                   <TouchableOpacity
                     onPress={()=>{
                       let { navigation } = this.props;
-                      navigation.navigate('AddDepositScreen',{schedule: this.state.schedule});
+                      navigation.navigate('AddDepositScreen',{schedule: this.state.schedule, clienteKey: this.state.clienteKey, callback:this.updateDeposits.bind(this)});
                     }}>
                     <View style={styles.verticalAligning}>
                       <Icon

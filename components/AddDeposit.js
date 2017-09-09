@@ -37,15 +37,6 @@ class AddDeposit extends Component {
                 <Text style={{color: 'white', fontWeight: '500'}}>Cancelar</Text>
               </View>
     </TouchableOpacity>),
-    headerRight: (<TouchableOpacity
-      onPress={()=>{
-                    console.log('Guardar');
-                  }
-              }>
-              <View style={{paddingRight: 20}}>
-                <Text style={{color: 'white', fontWeight: '500'}}>Guardar</Text>
-              </View>
-    </TouchableOpacity>),
   });
 
   constructor(props){
@@ -53,6 +44,8 @@ class AddDeposit extends Component {
     this.state={
       showActivityIndicator: true,
       schedule: null,
+      depositNumber: '',
+      monto: '',
     }
   }
   convertToDollars(n, currency) {
@@ -60,7 +53,39 @@ class AddDeposit extends Component {
   }
 
   componentWillMount(){
+    console.log(this.props.navigation.state.params.schedule);
+    console.log(this.props.navigation.state.params.clienteKey);
     this.setState({schedule: this.props.navigation.state.params.schedule, showActivityIndicator: false})
+  }
+
+  saveDeposit(){
+    if (this.state.depositNumber && this.state.monto){
+      var transferencia = {};
+      transferencia['fechaPago'] = this.state.schedule.fechaPago;
+
+      var currentDate = new Date();
+      var fechaTransferencia = (currentDate.getDate() + '/' + (currentDate.getMonth()+1) + '/' + currentDate.getFullYear());
+      var horaTransferencia = (currentDate.getHours() + ':' + currentDate.getMinutes());
+
+      transferencia['fechaTransferencia'] = fechaTransferencia;
+      transferencia['horaTransferencia'] = horaTransferencia;
+      transferencia['monto'] = this.state.monto;
+      transferencia['transferencia'] = this.state.depositNumber;
+
+      Firebase.saveDeposit(transferencia, this.props.navigation.state.params.clienteKey, ()=>{
+        Alert.alert('Depósito', 'Transferencia guardada satisfactoriamente.',  [ {text: 'Ok', onPress: () => {
+          this.props.navigation.state.params.callback();
+          const backAction = NavigationActions.back();
+          this.props.navigation.dispatch(backAction);
+        }},],  { cancelable: false });
+      }, (error)=>{
+        console.log(error);
+      })
+    } else {
+      Alert.alert('Error', 'Transferencia y Montos son requeridos.',  [ {text: 'Ok', onPress: () => {
+        console.log('validacion.');
+      }},],  { cancelable: false });
+    }
   }
 
   render(){
@@ -79,14 +104,16 @@ class AddDeposit extends Component {
       )
     } else {
       return(
-        <View style={styles.container}>
-        <StatusBar
-           barStyle="light-content"
-        />
-        <ScrollView>
-        <View style={styles.containerAdmin}>
+        <KeyboardAvoidingView
+          behavior='padding'
+          style={styles.container}
+        >
+          <StatusBar
+             barStyle="light-content"
+          />
+
         {this.state.schedule ? (
-        <View style={styles.dialogContentView}>
+        <View style={styles.containerAdmin}>
           <View>
             <Text style={styles.balanceAmountStyle}>{this.convertToDollars(parseFloat(this.state.schedule && this.state.schedule.monto ? this.state.schedule.monto : 0.0), '$')}</Text>
           </View>
@@ -106,25 +133,43 @@ class AddDeposit extends Component {
               }}
             />
           </View>
-          <View>
-          <TextInput style={styles.textInputStyle}
-             autoCapitalize= {'none'}
-             autoCorrect={false}
-             placeholder= {'# Transferencia'}
-             onChangeText={(depositNumber) => this.setState({depositNumber})}
-             returnKeyType={'go'}
-             keyboardType={'default'}
-             value={this.state.depositNumber}
-          />
+          <View style={{borderRadius: 6, borderWidth: 0.3, borderColor: 'grey', padding: 3, marginTop: 20, width: width - 20, marginHorizontal: 20, height: 44}}>
+            <TextInput style={styles.textInputStyle}
+               autoCapitalize= {'none'}
+               autoCorrect={false}
+               placeholder= {'# Transferencia'}
+               onChangeText={(depositNumber) => this.setState({depositNumber})}
+               returnKeyType={'go'}
+               keyboardType={'default'}
+               value={this.state.depositNumber}
+            />
           </View>
+          <View style={{borderRadius: 6, borderWidth: 0.3, borderColor: 'grey', padding: 3, marginTop: 20, width: width - 20, marginHorizontal: 20, height: 44}}>
+            <TextInput style={styles.textInputStyle}
+               autoCapitalize= {'none'}
+               autoCorrect={false}
+               placeholder= {'$ 0.00'}
+               onChangeText={(monto) => this.setState({monto})}
+               returnKeyType={'go'}
+               keyboardType={'default'}
+               value={this.state.monto}
+            />
+          </View>
+
+          <TouchableOpacity
+            onPress={this.saveDeposit.bind(this)}
+          >
+           <Text style={styles.textInsideButtons}>
+             Guardar
+           </Text>
+          </TouchableOpacity>
+
         </View>) : (
-            <View style={styles.dialogContentView}>
+            <View>
               <Text>No hay datos del deposito.</Text>
             </View>)
           }
-        </View>
-        </ScrollView>
-        </View>
+        </KeyboardAvoidingView>
       );
     }
   }
@@ -143,77 +188,40 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
   },
-  containerContract: {
-    width,
-    height: 120,
-    backgroundColor: '#FFFFFF',
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   containerAdmin: {
-    width,
-    backgroundColor: '#FFFFFF',
     flex: 1,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
-    justifyContent: 'center',
   },
   verticalAligning: {
     flexDirection: 'row',
-  },
-  verticalAligningSelected: {
-    flexDirection: 'row',
-    borderBottomWidth: 2,
-    borderColor: '#C2272F'
-  },
-  textButtonAccountAndClients: {
-    color: '#21243D',
-    fontSize: 16,
-    textAlign: 'center',
-    fontWeight: '500',
-    marginLeft: 5,
-  },
-  containerAccountsAndClientsList: {
-    marginTop: 20,
-    width,
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  itemContainerAccountsAndClientsList: {
-    width: width - 20,
-    height: 60,
-    backgroundColor: '#E4E4E4',
-    borderRadius: 10,
-    marginBottom: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  itemContainerClients: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: width - 20,
-    justifyContent: 'space-between',
-    paddingHorizontal: 10,
-  },
-  clientDataContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  clientDataTextContainer:{
-    marginHorizontal: 10,
-  },
-  clientDataTextStyle:{
-    color: '#21243D',
-    fontSize: 14,
-    fontWeight: 'bold',
   },
   balanceAmountStyle: {
     color: '#959595',
     textAlign: 'center',
     fontSize: 30,
 
+  },
+  textInputStyle: {
+    height: 40,
+    paddingLeft: 10,
+  },
+  loginButtonContainer:{
+    width: width - 100,
+    height: 44,
+    backgroundColor: '#6AB817',
+    borderRadius: 5,
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 40,
+  },
+  textInsideButtons:{
+    marginTop: 40,
+    color: '#C2272F',
+    fontSize: 16,
+    fontWeight: 'bold',
+    backgroundColor: 'transparent',
   },
 });
 
