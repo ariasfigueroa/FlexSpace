@@ -80,9 +80,14 @@ class Client extends Component {
         <TouchableOpacity
         style={{marginRight: 30}}
           onPress={()=>{
-            Alert.alert('Enviar Email', 'Esto abrira una opcion.',  [ {text: 'No', onPress: () => console.log('No Pressed'), style: 'cancel'}, {text: 'Si', onPress: () => {
-              Communications.email(['contacto@flexspace.com'], null, null, null, 'Soporte');
-            }},],  { cancelable: false });
+            Firebase.obtainContactData((contact)=>{
+              Alert.alert('Enviar Email', 'Esto abrira una opcion.',  [ {text: 'No', onPress: () => console.log('No Pressed'), style: 'cancel'}, {text: 'Si', onPress: () => {
+                Communications.email([contact.email], null, null, null, 'Soporte');
+              }},],  { cancelable: false });
+            }, (error)=>{
+              console.log(error);
+            });
+
           }
         }
         >
@@ -97,9 +102,13 @@ class Client extends Component {
 
         <TouchableOpacity
           onPress={() => {
-            Alert.alert('Enlazar llamada', 'Te comunicaremos al: (479)276 9522',  [ {text: 'No', onPress: () => console.log('No Pressed'), style: 'cancel'}, {text: 'Si', onPress: () => {
-              Communications.phonecall('4792769522', false);
-            }},],  { cancelable: false });
+            Firebase.obtainContactData((contact)=>{
+              Alert.alert('Enlazar llamada', 'Te comunicaremos al: (479)276 9522',  [ {text: 'No', onPress: () => console.log('No Pressed'), style: 'cancel'}, {text: 'Si', onPress: () => {
+                Communications.phonecall(contact.phone, false);
+              }},],  { cancelable: false });
+            }, (error)=>{
+              console.log(error);
+            });
             }
           }
         >
