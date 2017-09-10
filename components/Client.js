@@ -168,7 +168,7 @@ class Client extends Component {
                       currentSchedule['monto'] = (currentSchedule.monto - itemL.monto);
                     }
                     if (indexDepositos === snapshotDepositos.numChildren()){
-                      this.setState({cliente: snapshot.val(), schedule: status ? currentSchedule : null, depositos, showActivityIndicator: false, });
+                      this.setState({cliente: snapshot.val(), schedule: status === false ? currentSchedule : null, depositos, showActivityIndicator: false, });
                     }
                   });
                 }, (errorDepositos)=>{

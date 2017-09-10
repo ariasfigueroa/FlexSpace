@@ -39,7 +39,7 @@ class FlexSpaceApp extends Component{
       userName: '',
       password: '',
       errorMessage: null,
-      showActivityIndicator: false,
+      showActivityIndicator: true,
       token: '',
     }
     this._resetErrors = this._resetErrors.bind(this)
@@ -87,6 +87,45 @@ class FlexSpaceApp extends Component{
           this.setState({token});
           // fcm token may not be available on first load, catch it here
       });
+
+      Firebase.alreadyLogged((User)=>{
+        Firebase.obtainUserRole(User.uid, (snapshot)=>{
+          if (snapshot){
+            const { navigate } = this.props.navigation;
+            var screen = '';
+            var props = {};
+            if (snapshot.child('role').val() === 'admin'){
+              screen = 'AdminScreen';
+              var clients = snapshot.child('cliente').val();
+              props['role'] = snapshot.child('role').val();
+              for (var clientL in clients){
+                props['cliente'] = clientL;
+                break;
+              }
+            }else {
+              screen = 'ClientScreen';
+              var clients = snapshot.child('cliente').val();
+              for (var clientL in clients){
+                props['cliente'] = clientL;
+                props['role'] = snapshot.child('role').val();
+                break;
+              }
+            }
+            console.log(props);
+            navigate(screen, props);
+            this.setState({showActivityIndicator: !this.state.showActivityIndicator, userName: '', password: ''});
+            }else {
+            console.log('user without permisions.');
+            this.setState({errorMessage: 'Usuario sin permisos.', showActivityIndicator: !this.state.showActivityIndicator});
+          }
+        }, (error)=>{
+          console.log(error);
+          this.setState({errorMessage: error, showActivityIndicator: !this.state.showActivityIndicator});
+        });
+      }, (error)=>{
+        console.log(error);
+        this.setState({showActivityIndicator: false})
+      });
       }
 
       componentWillUnmount() {
@@ -111,40 +150,7 @@ class FlexSpaceApp extends Component{
           this.setState({showActivityIndicator: !this.state.showActivityIndicator});
           Firebase.loginWithEmail(this.state.userName, this.state.password , (User)=>{
             // get userRole
-            Firebase.obtainUserRole(User.uid, (snapshot)=>{
-              if (snapshot){
-                const { navigate } = this.props.navigation;
-                var screen = '';
-                var props = {};
-                if (snapshot.child('role').val() === 'admin'){
-                  screen = 'AdminScreen';
-                  var clients = snapshot.child('cliente').val();
-                  props['role'] = snapshot.child('role').val();
-                  for (var clientL in clients){
-                    props['cliente'] = clientL;
-                    break;
-                  }
-                }else {
-                  screen = 'ClientScreen';
-                  var clients = snapshot.child('cliente').val();
-                  for (var clientL in clients){
-                    props['cliente'] = clientL;
-                    props['role'] = snapshot.child('role').val();
-                    break;
-                  }
-                }
-                console.log(props);
-                navigate(screen, props);
-                this.setState({showActivityIndicator: !this.state.showActivityIndicator, userName: '', password: ''});
-                }else {
-                console.log('user without permisions.');
-                this.setState({errorMessage: 'Usuario sin permisos.', showActivityIndicator: !this.state.showActivityIndicator});
-              }
-            }, (error)=>{
-              console.log(error);
-              this.setState({errorMessage: error, showActivityIndicator: !this.state.showActivityIndicator})
-            });
-
+          console.log('user logged');
           }, (errorMessage)=>{
             console.log(errorMessage);
             this.setState({errorMessage: errorMessage.message, showActivityIndicator: !this.state.showActivityIndicator})
