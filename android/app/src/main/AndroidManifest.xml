@@ -16,7 +16,7 @@
       android:name=".MainApplication"
       android:allowBackup="true"
       android:label="@string/app_name"
-      android:icon="@mipmap/ic_launcher"
+      android:icon="@mipmap/ic_flexspace_launcher"
       android:theme="@style/AppTheme">
       <service android:name="com.evollu.react.fcm.MessagingService" android:enabled="true" android:exported="true">
            <intent-filter>
