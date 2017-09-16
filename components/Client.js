@@ -143,8 +143,16 @@ class Client extends Component {
 
   componentWillMount(){
     this.setState({clienteKey: this.props.navigation.state.params.cliente, role: this.props.navigation.state.params.role});
-    console.log(this.props.navigation.state.params.cliente);
-    console.log(this.props.navigation.state.params.role);
+  }
+
+  convertTimestampToString(timestamp){
+    if (timestamp){
+      var date = new Date(timestamp);
+      return (date.getDate() + '/' + (date.getMonth()+1) + '/' + date.getFullYear());
+    } else {
+      return '';
+    }
+
   }
 
   componentDidMount(){
@@ -166,20 +174,25 @@ class Client extends Component {
               }
               if (index === snapshotSchedule.numChildren()){
                 Firebase.obtainDepositos(this.state.clienteKey, (snapshotDepositos)=>{
-                  var indexDepositos = 0;
-                  var depositos = [];
-                  snapshotDepositos.forEach((itemDeposito)=>{
-                    indexDepositos ++;
-                    var itemL = itemDeposito.val();
-                    itemL['key'] = indexDepositos-1;
-                    depositos.push(itemL);
-                    if (itemDeposito.child('fechaPago').val() === item.child('fechaPago').val() && status === false){
-                      currentSchedule['monto'] = (currentSchedule.monto - itemL.monto);
-                    }
-                    if (indexDepositos === snapshotDepositos.numChildren()){
-                      this.setState({cliente: snapshot.val(), schedule: status === false ? currentSchedule : null, depositos, showActivityIndicator: false, });
-                    }
-                  });
+                  if (snapshotDepositos.val()){
+                    var indexDepositos = 0;
+                    var depositos = [];
+                    snapshotDepositos.forEach((itemDeposito)=>{
+                      indexDepositos ++;
+                      var itemL = itemDeposito.val();
+                      itemL['key'] = indexDepositos-1;
+                      depositos.push(itemL);
+                      if (itemDeposito.child('fechaPago').val() === item.child('fechaPago').val() && status === false){
+                        currentSchedule['monto'] = (currentSchedule.monto - itemL.monto);
+                      }
+                      if (indexDepositos === snapshotDepositos.numChildren()){
+                        this.setState({cliente: snapshot.val(), schedule: status === false ? currentSchedule : null, depositos, showActivityIndicator: false, });
+                      }
+                    });
+                  } else {
+                    console.log('here');
+                    this.setState({cliente: snapshot.val(), schedule: status === false ? currentSchedule : null, showActivityIndicator: false, });
+                  }
                 }, (errorDepositos)=>{
                   console.log(errorDepositos);
                 });
@@ -306,11 +319,11 @@ class Client extends Component {
               </View>
               <View style={styles.contactBoxStyle}>
                 <Text style={styles.contactBoxTitleStyle}>FECHA PARA INCREMENTO</Text>
-                <Text style={[styles.contactBoxTitleStyle, {fontWeight: 'bold'}]}>{this.state.cliente.fechaIncremento}</Text>
+                <Text style={[styles.contactBoxTitleStyle, {fontWeight: 'bold'}]}>{this.convertTimestampToString(this.state.cliente.fechaIncremento)}</Text>
               </View>
               <View style={styles.contactBoxStyle}>
                 <Text style={styles.contactBoxTitleStyle}>VIGENCIA</Text>
-                <Text style={[styles.contactBoxTitleStyle, {fontWeight: 'bold'}]}>{this.state.cliente.vigenciaContrato}</Text>
+                <Text style={[styles.contactBoxTitleStyle, {fontWeight: 'bold'}]}>{this.convertTimestampToString(this.state.cliente.vigenciaContrato)}</Text>
               </View>
             </View>
           </View>
