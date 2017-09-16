@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
   logoView: {
     width: 180,
     height:100,
-    backgroundColor: "rgba(255,255,255,0.80)",
+    backgroundColor: "transparent",
     borderRadius: 10,
     marginBottom: 50,
     flex: 1,
