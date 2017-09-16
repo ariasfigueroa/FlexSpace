@@ -43,6 +43,7 @@ class Client extends Component {
     headerTitle: (
       <Image style={{width: 28, height: 30}} source={require('../resources/img/logoIconWhite.png')}/>
     ),
+    headerTitleStyle: { alignItems: 'center', justifyContent: 'center' },
     headerLeft: navigation.state.params.role && navigation.state.params.role !== 'admin' ?
     (<TouchableOpacity
       onPress={()=>{
@@ -274,11 +275,12 @@ class Client extends Component {
         <ScrollView>
           <View style={styles.containerHeader}>
             <View style={styles.avaterContainer}>
+            {this.state.cliente.imagenUrl ? (
               <CachedImage
                 resizeMode={'contain'}
                 source={{uri: this.state.cliente.imagenUrl}}
                 style={styles.imageAvatar}
-              />
+                      />) : null}
             </View>
             {this.state.schedule ?
             (
