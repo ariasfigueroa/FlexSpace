@@ -82,7 +82,7 @@ class Client extends Component {
         style={{marginRight: 30}}
           onPress={()=>{
             Firebase.obtainContactData((contact)=>{
-              Alert.alert('Enviar Email', 'Esto abrira una opcion.',  [ {text: 'No', onPress: () => console.log('No Pressed'), style: 'cancel'}, {text: 'Si', onPress: () => {
+              Alert.alert('Enviar Email', 'Te enviaremos a tu correo predefinido.',  [ {text: 'No', onPress: () => console.log('No Pressed'), style: 'cancel'}, {text: 'Si', onPress: () => {
                 Communications.email([contact.email], null, null, null, 'Soporte');
               }},],  { cancelable: false });
             }, (error)=>{
