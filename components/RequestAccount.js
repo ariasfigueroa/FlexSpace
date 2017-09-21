@@ -200,7 +200,7 @@ class RequestAccount extends Component {
               <View style={styles.dropdownStyle}>
                 <Dropdown
                 containerStyle={{marginHorizontal: 10}}
-                label='Para que empresa?'
+                label='¿Para que empresa?'
                 data={this.state.clientes}
                 onChangeText={(value, index)=>{
                   var clientsL = this.state.clientes;
