@@ -173,7 +173,7 @@ class AddDeposit extends Component {
 
         </View>) : (
             <View>
-              <Text>No hay datos del deposito.</Text>
+              <Text>No hay datos del depósito.</Text>
             </View>)
           }
         </KeyboardAvoidingView>
