@@ -16,7 +16,7 @@
       android:name=".MainApplication"
       android:allowBackup="true"
       android:label="@string/app_name"
-      android:icon="@mipmap/ic_flexspace_launcher"
+      android:icon="@mipmap/ic_launcher"
       android:theme="@style/AppTheme">
       <service android:name="com.evollu.react.fcm.MessagingService" android:enabled="true" android:exported="true">
            <intent-filter>
@@ -45,6 +45,8 @@
         </intent-filter>
       </activity>
       <activity android:name="com.facebook.react.devsupport.DevSettingsActivity" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_noti_icon" />
     </application>
 
 </manifest>
