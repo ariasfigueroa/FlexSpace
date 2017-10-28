@@ -174,7 +174,12 @@ class Admin extends Component {
                                   if (indexCuentasPendientes === snapshotRequestedAccounts.numChildren()){
                                     //update cliente
                                     Firebase.obtainClient(item.clienteKey, (currentClient)=>{
-                                      var currentTokends = currentClient.child('tokens').val();
+                                      var currentTokensTemp = currentClient.child('tokens').val();
+                                      var currentTokends = [];
+                                      console.log("value exist", currentTokensTemp);
+                                      if (currentTokensTemp){
+                                        currentTokends = currentTokensTemp;
+                                      }
                                       currentTokends.push({token: item.token, uid: item.key});
                                       Firebase.setTokensToClient(currentTokends, item.clienteKey, ()=>{
                                         this.setState({cuentasPendientes, showActivityIndicator: false});
@@ -184,6 +189,8 @@ class Admin extends Component {
                                     }, (errorClient) =>{
                                         console.log(errorClient);
                                     });
+                                  } else {
+                                    console.log("indexCuentasPendientes != to snapshotRequestedAccounts.numChildren()");
                                   }
                                 });
                               }, (error)=>{
